@@ -9,87 +9,80 @@ import scipy.integrate
 
 const.L_sun
 
-Nrings = 100
-M = 10 * 2 * 10**30  
-Mr = 10**15  
+
+M = 10 * const.M_sun.value  #Mass of Black hole
+Mr = 10**15  #Accretion rate
+
 Fstart = 10**14
 Fstop = 10**19
 Fsteps = 100
-f = np.linspace(Fstart, Fstop, Fsteps)
-Log_f = np.log(f)
+f = np.linspace(Fstart, Fstop, Fsteps)  #Range of frequencies
 
 
+Nrings = 1000
+Rg = (const.G.value * M) / ((const.c.value)**2)  #
+Rin = 6 * Rg  #Innermost stable orbit
+Rout = (10**5) * Rg  #Outermost orbit
 
-Rg = (const.G.value * M) / ((const.c.value)**2)
-Rin = 6 * Rg  
-Rout = (10**5) * Rg  
-R = np.linspace(Rin, Rout, Nrings + 1)
-Rmid = (R[:-1] + R[1:]) / 2
-Log_RMid = np.log(Rmid)
+rin = Rin/Rg  #Scaled innermost stable orbit
+rout = Rout/Rg  #Scaled innermost stable orbit
 
-rin = Rin/Rg
-rout = Rout/Rg
-
-r = np.linspace(rin, rout, Nrings + 1) 
-
-r_midpoints = (r[:-1] + r[1:]) / 2
+r = np.linspace(rin, rout, Nrings + 1)  
+r_midpoints = (r[:-1] + r[1:]) / 2  #Array of increasingly sized disks
 
 Log_rin = np.log(rin)
 Log_rout = np.log(rout)
 
-Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
-Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2
+Log_r = np.linspace(Log_rin, Log_rout, Nrings)
+Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
 
 
-def Temp():
-  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * r_midpoints**3 * Rg**3)) * (1 - ( rin / r_midpoints )**(1/2)))**(1/4)
-  return T
-
-'''print(Temp())
-print(Rmid)
-
-plt.loglog(Rmid, Temp())
-plt.title('')
-plt.xlabel('')
-plt.ylabel('')
-plt.show()'''
-
-
-
-def Temp_Logs():
+#Temperature of accretion disk using the log of scaled distances
+def Temp_Logs(M, Mr, Log_rMid, Log_rin):
   TL = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
   return TL
 
-#print(Temp_Logs())
-
-'''plt.plot(Log_RMid, Temp_Logs())
-plt.title('')
-plt.xlabel('')
-plt.ylabel('')
-plt.show()'''
-
-
-def BlackBodyFlux():
-  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs()))) - 1)
+#Luminosity per unit frequency per unit area of an isotropically emitting blackbody
+def Flux(f, M, Mr, Log_rMid, Log_rin):
+  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs(M, Mr, Log_rMid, Log_rin)))) - 1)
   return Fv
 
-#print(BlackBodyFlux())
+#Integrand to calculate luminosity
+def integrand(Log_rMid, M, Mr, Log_rin, f):
+ 
+    T = Temp_Logs(M, Mr, Log_rMid, Log_rin)
+    Fv = Flux(f, M, Mr, Log_rMid, Log_rin)
+    return Fv * 4 * np.pi * Log_rMid * Rg**2  
 
-#plt.plot(Log_rMid, BlackBodyFlux())
-#plt.show()
-
-def LV():
-  def integrand():
-    T = Temp_Logs()
-    Fv = BlackBodyFlux()
-    return Fv * T * 4 * np.pi * Rg**2
+#Integrating with respect to log(distance) to get luminosity per unit frequency
+def Lf(f, M, Mr, Log_rin, Log_rout):
   
-  Lv = integrand() * ( Log_rout - Log_rin)
-  return Lv
+    return scipy.integrate.quad(integrand, Log_rin, Log_rout, args=(M, Mr, Log_rin, f))[0]
 
-print(LV())
+#Integrating with respect to frequency to get the total luminosity of the accretion disk
+def L(M, Mr, Log_rin, Log_rout, Fstart, Fstop):
+    
+    result, _ = scipy.integrate.quad(Lf, Fstart, Fstop, args=(M, Mr, Log_rin, Log_rout))
+    return result
+
+#Luminosity per unit frequency in an array
+Lpf = np.array([Lf(freq, M, Mr, Log_rin, Log_rout) for freq in f])
+
+
+total_L = L(M, Mr, Log_rin, Log_rout, Fstart, Fstop)
+
+print(f"Total Luminosity: {total_L:.3e} W")
+
+
+plt.loglog(f, f*Lpf)
+plt.title('Spectrum of Acctretion disk of black hole')
+plt.xlabel('Log(frequency)')
+plt.ylabel('Log(frequency*Luminosity)')
+plt.grid(True)
+plt.show()
 
 
 
-'''plt.loglog(f , f * LV())
-plt.show()'''
+
+
+
