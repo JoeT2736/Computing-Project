@@ -36,6 +36,10 @@ Log_rout = np.log(rout)
 Log_r = np.linspace(Log_rin, Log_rout, Nrings)
 Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
 
+#Temperature of accretion disk in terms of scaled units
+def Temp(M, Mr, r_midpoints, rin):
+  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * r_midpoints**3 * Rg**3)) * (1 - ( rin / r_midpoints )**(1/2)))**(1/4)
+  return T
 
 #Temperature of accretion disk using the log of scaled distances
 def Temp_Logs(M, Mr, Log_rMid, Log_rin):
@@ -73,6 +77,17 @@ total_L = L(M, Mr, Log_rin, Log_rout, Fstart, Fstop)
 
 print(f"Total Luminosity: {total_L:.3e} W")
 
+'''
+plt.plot(r_midpoints, Temp(M, Mr, r_midpoints, rin))
+plt.title('Temperature of accretion disk at distance from centre')
+plt.show()
+'''
+
+'''
+plt.plot(Log_rMid, Temp_Logs(M, Mr, Log_rMid, Log_rin))
+plt.title('Log(Temperature) of accretion disk at Log(distance) from centre')
+plt.show()
+'''
 
 plt.loglog(f, f*Lpf)
 plt.title('Spectrum of Acctretion disk of black hole')
