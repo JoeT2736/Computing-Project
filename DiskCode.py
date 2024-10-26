@@ -23,6 +23,8 @@ Nrings = 1000
 Rg = (const.G.value * M) / ((const.c.value)**2)  #
 Rin = 6 * Rg  #Innermost stable orbit
 Rout = (10**5) * Rg  #Outermost orbit
+R = np.linspace(Rin, Rout, Nrings + 1) 
+R_midpoints = (R[:-1] + R[1:]) / 2
 
 rin = Rin/Rg  #Scaled innermost stable orbit
 rout = Rout/Rg  #Scaled innermost stable orbit
@@ -35,6 +37,12 @@ Log_rout = np.log(rout)
 
 Log_r = np.linspace(Log_rin, Log_rout, Nrings)
 Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
+
+
+def Temp1(M, Mr, R_midpoints, Rin):
+  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3 * Rg**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
+  return T
+
 
 #Temperature of accretion disk in terms of scaled units
 def Temp(M, Mr, r_midpoints, rin):
@@ -77,9 +85,20 @@ total_L = L(M, Mr, Log_rin, Log_rout, Fstart, Fstop)
 
 print(f"Total Luminosity: {total_L:.3e} W")
 
+
+plt.plot(R_midpoints, Temp1(M, Mr, R_midpoints, Rin))
+plt.xlim(-900000, 0.06e9)
+plt.title('Temperature of accretion disk at distance from innermost stable orbit')
+plt.xlabel('Distance from innermost stable orbit (m)')
+plt.ylabel('Temperature (K)')
+plt.show()
+
 '''
 plt.plot(r_midpoints, Temp(M, Mr, r_midpoints, rin))
-plt.title('Temperature of accretion disk at distance from centre')
+plt.xlim(-50, 3500)
+plt.title('Temperature of accretion disk at distance from innermost stable orbit (in terms of scaled units)')
+plt.xlabel('Distance from innermost stable orbit')
+plt.ylabel('Temperature (K)')
 plt.show()
 '''
 
