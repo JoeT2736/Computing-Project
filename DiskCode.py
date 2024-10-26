@@ -90,7 +90,7 @@ plt.show()
 '''
 
 plt.loglog(f, f*Lpf)
-plt.title('Spectrum of Acctretion disk of black hole')
+plt.title('Spectrum of Acctretion disk of a 10 Solar mass black hole')
 plt.xlabel('Log(frequency)')
 plt.ylabel('Log(frequency*Luminosity)')
 plt.grid(True)
