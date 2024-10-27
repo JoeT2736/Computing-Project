@@ -6,6 +6,8 @@ from astropy import units as u
 import scipy
 from scipy.integrate import quad
 import scipy.integrate
+import sympy
+
 
 
 M = 10 * const.M_sun.value  #Mass of Black hole
@@ -40,23 +42,87 @@ r_midpoints2 = (r2[:-1] + r2[1:]) / 2
 Log_rin = np.log(rin)
 Log_rout = np.log(rout)
 
-Log_r = np.linspace(Log_rin, Log_rout, Nrings)
-Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
+Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
+#Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
 
 Log_rin2 = np.log(rin2)
 Log_r2 = np.linspace(Log_rin2, Log_rout, Nrings)
-Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2  
+Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2 
+
+#min/max efficiency of accretion rate to energy
+eta_min = 0.1
+eta_max = 0.4
+
+#Eddington limit
+def L_edd(M):
+  return (4 * np.pi * const.G.value * M * const.m_p.value * const.c.value)/const.sigma_T.value
+
+#Accretion rate limit for min efficiency
+Mr_edd_min = L_edd(M)/(eta_max * const.c.value**2)
+
+#Accretion rate limit for max efficiency
+Mr_edd_max = L_edd(M)/(eta_min * const.c.value**2)
+
+'''
+def luminosity(M, Mr, Log_rMid, Log_rin, f):
+  L = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4) * ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)))) - 1)
+  return scipy.integrate.quad(L, Log_rin, Log_rout, args=(M, Mr, Log_rin, f))[0]
+
+print(luminosity(M, Mr, Log_rMid, Log_rin, f))
+'''
 
 
-def Temp1(M, Mr, R_midpoints, Rin):
-  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3 * Rg**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
-  return T
 
 
+#def Temp1(M, Mr, R_midpoints, Rin):
+  #T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3 * Rg**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
+  #return T
+
+'''
 #Temperature of accretion disk in terms of scaled units
-def Temp(M, Mr, r_midpoints, rin):
-  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * r_midpoints**3 * Rg**3)) * (1 - ( rin / r_midpoints )**(1/2)))**(1/4)
+def Temp(M, Mr, Log_rMid, Log_rin):
+  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
   return T
+
+def Flux(f, M, Mr, Log_rMid, Log_rin):
+  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp(M, Mr, Log_rMid, Log_rin)))) - 1)
+  return Fv
+
+def integrand(Log_rMid, M, Mr, f, Rg):
+  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
+  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * T))) - 1)
+  return Fv * T * 4 * np.pi * Log_rMid * Rg**2 
+
+
+def Lf(f, Log_rin, Log_rout):
+  return scipy.integrate.quad(integrand, Log_rin, Log_rout, args=(M, Mr, f, Rg))[0]
+
+
+Lpf = np.array([Lf(freq, Log_rin, Log_rout) for freq in f1])
+#print(Lpf)
+
+def L(Fstart, Fstop):
+  result = scipy.integrate.quad(Lf, Fstart, Fstop, args=(Log_rin, Log_rout))[0]
+  return result
+
+Lt = scipy.integrate.trapz(f1*Lpf, f1)
+
+
+total_L = L(Fstart, Fstop)
+print(f"Total Luminosity for no spin, 10e15Mr: {total_L:.3e} W")
+print(Lt)
+
+plt.loglog(f1, f1*Lpf, label='Mr=10e15, Rin=6Rg')
+plt.title('Spectrum of Acctretion disk of black hole')
+plt.xlabel('Log(frequency)')
+plt.ylabel('Log(frequency*Luminosity)')
+plt.grid(True)
+plt.show()
+'''
+
+
+
+
 
 #Temperature of accretion disk using the log of scaled distances
 def Temp_Logs(M, Mr, Log_rMid, Log_rin):
@@ -73,38 +139,78 @@ def Temp_Logs3(M, Mr2, Log_rMid, Log_rin):
   TL = (((3 * const.G.value * M * Mr2) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
   return TL
 
+#At Eddington limit min efficiency
+def Temp_Logs4(M, Mr_edd_min, Log_rMid, Log_rin):
+  TL = (((3 * const.G.value * M * Mr_edd_min) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
+  return TL
+
+#At Eddington limit max efficiency
+def Temp_Logs5(M, Mr_edd_max, Log_rMid, Log_rin):
+  TL = (((3 * const.G.value * M * Mr_edd_max) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
+  return TL
+
+
 #Luminosity per unit frequency per unit area of an isotropically emitting blackbody
 def Flux(f, M, Mr, Log_rMid, Log_rin):
   Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs(M, Mr, Log_rMid, Log_rin)))) - 1)
   return Fv
 
+#different r range
 def Flux2(f, M, Mr, Log_rMid2, Log_rin2):
   Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs2(M, Mr, Log_rMid2, Log_rin2)))) - 1)
   return Fv
 
+#different accretion rate
 def Flux3(f, M, Mr2, Log_rMid, Log_rin):
   Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs3(M, Mr2, Log_rMid, Log_rin)))) - 1)
   return Fv
+
+
+def Flux4(f, M, Mr_edd_min, Log_rMid, Log_rin):
+  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs4(M, Mr_edd_min, Log_rMid, Log_rin)))) - 1)
+  return Fv
+
+
+def Flux5(f, M, Mr_edd_max, Log_rMid, Log_rin):
+  Fv = ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * Temp_Logs5(M, Mr_edd_max, Log_rMid, Log_rin)))) - 1)
+  return Fv
+
 
 #Integrand to calculate luminosity
 def integrand(Log_rMid, M, Mr, Log_rin, f):
  
     T = Temp_Logs(M, Mr, Log_rMid, Log_rin)
     Fv = Flux(f, M, Mr, Log_rMid, Log_rin)
-    return Fv * 4 * np.pi * Log_rMid * Rg**2  
+    return Fv * T * 4 * np.pi * Log_rMid * Rg**2  
 
+#different r range
 def integrand2(Log_rMid2, M, Mr, Log_rin2, f):
  
     T = Temp_Logs2(M, Mr, Log_rMid2, Log_rin2)
     Fv = Flux2(f, M, Mr, Log_rMid2, Log_rin2)
-    return Fv * 4 * np.pi * Log_rMid2 * Rg**2  
+    return Fv * T * 4 * np.pi * Log_rMid2 * Rg**2  
 
-
+#different accretion rate
 def integrand3(Log_rMid, M, Mr2, Log_rin, f):
  
     T = Temp_Logs3(M, Mr2, Log_rMid, Log_rin)
     Fv = Flux3(f, M, Mr2, Log_rMid, Log_rin)
-    return Fv * 4 * np.pi * Log_rMid * Rg**2  
+    return Fv * T * 4 * np.pi * Log_rMid * Rg**2  
+
+
+def integrand4(Log_rMid, M, Mr_edd_min, Log_rin, f):
+ 
+    T = Temp_Logs4(M, Mr_edd_min, Log_rMid, Log_rin)
+    Fv = Flux(f, M, Mr_edd_min, Log_rMid, Log_rin)
+    return Fv * T * 4 * np.pi * Log_rMid * Rg**2  
+
+
+def integrand5(Log_rMid, M, Mr_edd_max, Log_rin, f):
+ 
+    T = Temp_Logs5(M, Mr_edd_max, Log_rMid, Log_rin)
+    Fv = Flux(f, M, Mr_edd_max, Log_rMid, Log_rin)
+    return Fv * T * 4 * np.pi * Log_rMid * Rg**2  
+
 
 
 #Integrating with respect to log(distance) to get luminosity per unit frequency
@@ -112,13 +218,26 @@ def Lf(f, M, Mr, Log_rin, Log_rout):
   
     return scipy.integrate.quad(integrand, Log_rin, Log_rout, args=(M, Mr, Log_rin, f))[0]
 
+#different r range
 def Lf2(f, M, Mr, Log_rin2, Log_rout):
   
     return scipy.integrate.quad(integrand2, Log_rin2, Log_rout, args=(M, Mr, Log_rin2, f))[0]
 
+#different accretion rate
 def Lf3(f, M, Mr2, Log_rin, Log_rout):
   
     return scipy.integrate.quad(integrand3, Log_rin, Log_rout, args=(M, Mr2, Log_rin, f))[0]
+
+
+def Lf4(f, M, Mr_edd_min, Log_rin, Log_rout):
+  
+    return scipy.integrate.quad(integrand4, Log_rin, Log_rout, args=(M, Mr_edd_min, Log_rin, f))[0]
+
+
+def Lf5(f, M, Mr_edd_max, Log_rin, Log_rout):
+  
+    return scipy.integrate.quad(integrand5, Log_rin, Log_rout, args=(M, Mr_edd_max, Log_rin, f))[0]
+
 
 #Integrating with respect to frequency to get the total luminosity of the accretion disk
 def L(M, Mr, Log_rin, Log_rout, Fstart, Fstop):
@@ -126,10 +245,12 @@ def L(M, Mr, Log_rin, Log_rout, Fstart, Fstop):
     result, _ = scipy.integrate.quad(Lf, Fstart, Fstop, args=(M, Mr, Log_rin, Log_rout))
     return result
 
+
 def L2(M, Mr, Log_rin2, Log_rout, Fstart, Fstop):
     
     result, _ = scipy.integrate.quad(Lf2, Fstart, Fstop, args=(M, Mr, Log_rin2, Log_rout))
     return result
+
 
 def L3(M, Mr2, Log_rin, Log_rout, Fstart, Fstop):
     
@@ -137,18 +258,38 @@ def L3(M, Mr2, Log_rin, Log_rout, Fstart, Fstop):
     return result
 
 
+def L4(M, Mr_edd_min, Log_rin, Log_rout, Fstart, Fstop):
+    
+    result, _ = scipy.integrate.quad(Lf4, Fstart, Fstop, args=(M, Mr_edd_min, Log_rin, Log_rout))
+    return result
+
+
+def L5(M, Mr_edd_max, Log_rin, Log_rout, Fstart, Fstop):
+    
+    result, _ = scipy.integrate.quad(Lf5, Fstart, Fstop, args=(M, Mr_edd_max, Log_rin, Log_rout))
+    return result
+
+
 #Luminosity per unit frequency in an array
 Lpf = np.array([Lf(freq, M, Mr, Log_rin, Log_rout) for freq in f])
 Lpf2 = np.array([Lf2(freq, M, Mr, Log_rin2, Log_rout) for freq in f])
 Lpf3 = np.array([Lf3(freq, M, Mr2, Log_rin, Log_rout) for freq in f])
+Lpf4 = np.array([Lf4(freq, M, Mr_edd_min, Log_rin, Log_rout) for freq in f])
+Lpf5 = np.array([Lf5(freq, M, Mr_edd_max, Log_rin, Log_rout) for freq in f])
 
 total_L = L(M, Mr, Log_rin, Log_rout, Fstart, Fstop)
-total_L2 = L(M, Mr, Log_rin2, Log_rout, Fstart, Fstop)
-total_L3 = L(M, Mr2, Log_rin, Log_rout, Fstart, Fstop)
+total_L2 = L2(M, Mr, Log_rin2, Log_rout, Fstart, Fstop)
+total_L3 = L3(M, Mr2, Log_rin, Log_rout, Fstart, Fstop)
+total_L4 = L(M, Mr_edd_min, Log_rin, Log_rout, Fstart, Fstop)
+total_L5 = L(M, Mr_edd_max, Log_rin, Log_rout, Fstart, Fstop)
 
+print(f"Eddington limit of Luminosity for 10 solar mass: {L_edd(M):.3e} W")
+print(f"Total Luminosity for no spin, min eddington limit accretion rate: {total_L4:.3e} W")
+print(f"Total Luminosity for no spin, max eddington limit accretion rate: {total_L5:.3e} W")
 print(f"Total Luminosity for no spin, 10e15Mr: {total_L:.3e} W")
 print(f"Total Luminosity for max spin: {total_L2:.3e} W")
 print(f"Total Luminosity for no spin, 10e13Mr: {total_L3:.3e} W")
+
 
 '''
 plt.plot(R_midpoints, Temp1(M, Mr, R_midpoints, Rin))
@@ -157,18 +298,18 @@ plt.title('Temperature of accretion disk at distance from innermost stable orbit
 plt.xlabel('Distance from innermost stable orbit (m)')
 plt.ylabel('Temperature (K)')
 plt.show()
-'''
 
-'''
+
+
 plt.plot(r_midpoints, Temp(M, Mr, r_midpoints, rin))
 plt.xlim(-50, 3500)
 plt.title('Temperature of accretion disk at distance from innermost stable orbit (in terms of scaled units)')
 plt.xlabel('Distance from innermost stable orbit')
 plt.ylabel('Temperature (K)')
 plt.show()
-'''
 
-'''
+
+
 plt.plot(Log_rMid, Temp_Logs(M, Mr, Log_rMid, Log_rin))
 plt.title('Log(Temperature) of accretion disk at Log(distance) from centre')
 plt.show()
@@ -177,15 +318,14 @@ plt.show()
 plt.loglog(f, f*Lpf, label='Mr=10e15, Rin=6Rg')
 plt.loglog(f, f*Lpf2, label='Mr=10e15, Rin=1.2Rg')
 plt.loglog(f, f*Lpf3, label='Mr=10e14, Rin=6Rg')
+plt.loglog(f, f*Lpf4, label='Mr=min eddington, Rin=6Rg')
+plt.loglog(f, f*Lpf5, label='Mr=max eddingont, Rin=6Rg')
 plt.legend()
 plt.title('Spectrum of Acctretion disk of black hole')
 plt.xlabel('Log(frequency)')
 plt.ylabel('Log(frequency*Luminosity)')
 plt.grid(True)
 plt.show()
-
-
-
 
 
 
