@@ -63,22 +63,24 @@ Mr_edd_min = L_edd(M)/(eta_max * const.c.value**2)
 #Accretion rate limit for max efficiency
 Mr_edd_max = L_edd(M)/(eta_min * const.c.value**2)
 
-'''
-def luminosity(M, Mr, Log_rMid, Log_rin, f):
-  L = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4) * ((2 * np.pi * const.h.value * f**3)/(const.c.value**2))/((np.exp(((const.h.value * f))/(const.k_B.value * (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)))) - 1)
-  return scipy.integrate.quad(L, Log_rin, Log_rout, args=(M, Mr, Log_rin, f))[0]
 
-print(luminosity(M, Mr, Log_rMid, Log_rin, f))
-'''
-
-
-
-
-#def Temp1(M, Mr, R_midpoints, Rin):
-  #T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3 * Rg**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
-  #return T
 
 '''
+def Temp1(M, Mr, R_midpoints, Rin):
+  T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
+  return T
+
+
+
+plt.plot(R_midpoints, Temp1(M, Mr, R_midpoints, Rin))
+plt.xlim(-900000, 0.06e9)
+plt.title('Temperature of accretion disk at distance from innermost stable orbit')
+plt.xlabel('Distance from innermost stable orbit (m)')
+plt.ylabel('Temperature (K)')
+plt.show()
+
+
+
 #Temperature of accretion disk in terms of scaled units
 def Temp(M, Mr, Log_rMid, Log_rin):
   T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * Log_rMid**3 * Rg**3)) * (1 - ( Log_rin / Log_rMid )**(1/2)))**(1/4)
@@ -291,16 +293,10 @@ print(f"Total Luminosity for max spin: {total_L2:.3e} W")
 print(f"Total Luminosity for no spin, 10e13Mr: {total_L3:.3e} W")
 
 
+
+
+
 '''
-plt.plot(R_midpoints, Temp1(M, Mr, R_midpoints, Rin))
-plt.xlim(-900000, 0.06e9)
-plt.title('Temperature of accretion disk at distance from innermost stable orbit')
-plt.xlabel('Distance from innermost stable orbit (m)')
-plt.ylabel('Temperature (K)')
-plt.show()
-
-
-
 plt.plot(r_midpoints, Temp(M, Mr, r_midpoints, rin))
 plt.xlim(-50, 3500)
 plt.title('Temperature of accretion disk at distance from innermost stable orbit (in terms of scaled units)')
