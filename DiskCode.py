@@ -325,3 +325,143 @@ plt.show()
 
 
 
+
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import astropy 
+from astropy import constants as const
+from astropy import units as u
+from astropy.modeling.models import BlackBody
+from astropy import units as u
+from astropy.visualization import quantity_support
+
+
+
+
+M = 10 * const.M_sun  #Mass of Black hole
+Mr = 10**15 *u.kg/u.s  #Accretion rate
+Mr2 = 10**14 *u.kg/(u.s*u.m**3)
+
+Fstart = 14 
+Fstop = 19
+Fsteps = 10
+f = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
+
+
+Nrings = 5
+Rg = (const.G * M) / ((const.c)**2)  #Schwarzschild radius
+Rin = 6 * Rg   #Innermost stable orbit
+Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
+Rout = (10**5) * Rg   #Outermost orbit
+R = np.linspace(Rin, Rout, Nrings + 1)
+R2 = np.linspace(Rin2, Rout, Nrings + 1)
+R_midpoints = ((R[1:] + R[:-1]) / 2) 
+R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) 
+
+
+
+rin = Rin/Rg  #Scaled innermost stable orbit
+rin2 = Rin2/Rg  #Scaled innermost stable orbit
+rout = Rout/Rg  #Scaled innermost stable orbit
+
+r = np.linspace(rin, rout, Nrings + 1)  
+r_midpoints = (r[:-1] + r[1:]) / 2  #Array of increasingly sized disks
+r2 = np.linspace(rin2, rout, Nrings + 1)  
+r_midpoints2 = (r2[:-1] + r2[1:]) / 2 
+
+'''
+Log_rin = np.log(rin)
+Log_rout = np.log(rout)
+
+Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
+#Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
+
+Log_rin2 = np.log(rin2)
+Log_r2 = np.linspace(Log_rin2, Log_rout, Nrings)
+Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2 
+'''
+
+#Area of each disk
+def Area(R_midpoints):
+  A = []
+  for i in range(len(R_midpoints)):
+    A1 = np.pi * R_midpoints[0]**2
+    B = np.pi * (R_midpoints[1:]**2 - R_midpoints[:-1]**2)
+    A.append([A1, B])
+    return A
+print(Area(R_midpoints))
+
+
+#Temperatue equation
+def Temp(M, Mr, R_midpoints, Rin):
+  a = (3 * const.G* M * Mr)
+  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * R_midpoints**3)
+  c = ( Rin / R_midpoints )**(1/2)
+  T = ((a / b) * (1 - c))**(1/4)
+  return T
+
+#print(Temp(M, Mr, R_midpoints, Rin))
+
+
+#Blackbody flux equation using built in function from astropy
+def flux(T):
+    bb = BlackBody(T)
+    return bb(f)
+
+#fluxm = [[0 for _ in range(Fsteps)] for _ in range(Nrings)]
+
+#Blackbody flux at each temperature in Temperature equation 
+for t in Temp(M, Mr, R_midpoints, Rin):
+   F = flux(t)
+   #fluxm.append(F)
+   #print(F)
+   #plt.semilogx(f, F)
+#plt.show()
+
+for i in 
+L = F * Area(R_midpoints)
+print(L)
+   
+#first set of F (constant T) * first element of area -> second * second 
+#for each set of F
+#gives luminosity for each ring
+#sum to get total luminosity?
+
+
+
+'''
+#Blackbody flux not using built in function
+def Flux(T):
+  a = (2 * np.pi * const.h * f**3)/(const.c**2)
+  b = ((const.h * f)/(const.k_B * T*u.k))
+  Fv = a/(np.exp(b) - 1)
+  return Fv
+
+for t2 in Temp(M, Mr, R_midpoints, Rin):
+   F2 = Flux(t2)
+   print(F2, t2)
+   plt.semilogx(f, F2, label = t2)
+plt.legend()   
+plt.show()
+'''
+
+
+
+
+
+
+
+
+
+
+'''
+with quantity_support():
+    plt.figure()
+    plt.semilogx(f, f)
+    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
+    plt.show()
+'''
+
