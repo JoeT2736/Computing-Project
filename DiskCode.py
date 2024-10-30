@@ -341,18 +341,18 @@ from astropy.visualization import quantity_support
 
 
 
-M = 10 * const.M_sun  #Mass of Black hole
-Mr = 10**15 *u.kg/u.s  #Accretion rate
+MassBH = 10 * const.M_sun  #Mass of Black hole
+AccR = 10**15 *u.kg/u.s  #Accretion rate
 Mr2 = 10**14 *u.kg/(u.s*u.m**3)
 
 Fstart = 14 
 Fstop = 19
 Fsteps = 10
-f = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
+freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
 
 
 Nrings = 5
-Rg = (const.G * M) / ((const.c)**2)  #Schwarzschild radius
+Rg = (const.G * MassBH) / ((const.c)**2)  #Schwarzschild radius
 Rin = 6 * Rg   #Innermost stable orbit
 Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
 Rout = (10**5) * Rg   #Outermost orbit
@@ -385,21 +385,20 @@ Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2
 '''
 
 #Area of each disk
-def Area(R_midpoints):
-  A = []
-  for i in range(len(R_midpoints)):
-    A1 = np.pi * R_midpoints[0]**2
-    B = np.pi * (R_midpoints[1:]**2 - R_midpoints[:-1]**2)
-    A.append([A1, B])
-    return A
-print(Area(R_midpoints))
+def Area(Radius):
+  A = np.zeros((Nrings, Fsteps))
+  A[0, :] = np.pi * Radius[0]**2
+  for i in range(1, len(Radius)):
+    A[i, :] = np.pi * (Radius[i]**2 - Radius[i-1]**2)
+  return A
+#print(Area(R_midpoints))
 
 
 #Temperatue equation
-def Temp(M, Mr, R_midpoints, Rin):
-  a = (3 * const.G* M * Mr)
-  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * R_midpoints**3)
-  c = ( Rin / R_midpoints )**(1/2)
+def Temp(M, Ar, Radius, RIN):
+  a = (3 * const.G* M * Ar)
+  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3)
+  c = ( RIN / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
 
@@ -407,23 +406,42 @@ def Temp(M, Mr, R_midpoints, Rin):
 
 
 #Blackbody flux equation using built in function from astropy
-def flux(T):
-    bb = BlackBody(T)
-    return bb(f)
+def flux(temp):
+    bb = BlackBody(temp)
+    return bb(freq)
+
 
 #fluxm = [[0 for _ in range(Fsteps)] for _ in range(Nrings)]
 
 #Blackbody flux at each temperature in Temperature equation 
-for t in Temp(M, Mr, R_midpoints, Rin):
+for t in Temp(MassBH, AccR, R_midpoints, Rin):
    F = flux(t)
-   #fluxm.append(F)
+   F = F.to(u.W / (u.m**2 * u.Hz * u.sr))
    #print(F)
-   #plt.semilogx(f, F)
+   #plt.semilogx(freq, F)
 #plt.show()
 
-for i in 
-L = F * Area(R_midpoints)
+
+for i in range(len(freq)):
+   for j in range(len(R_midpoints)):
+      L = F[]
+
+
+L = F * Area(R_midpoints)*u.m**2
 print(L)
+#plt.loglog(freq, L)
+#plt.show()
+
+
+#for i in Temp(MassBH, AccR, R_midpoints, Rin):
+   #for j in range(len(Area(R_midpoints))):
+      #F2 = flux(i)
+      #print(F2)
+      #L = F2 * Area()
+      #print(L)
+   
+  
+
    
 #first set of F (constant T) * first element of area -> second * second 
 #for each set of F
@@ -447,21 +465,3 @@ for t2 in Temp(M, Mr, R_midpoints, Rin):
 plt.legend()   
 plt.show()
 '''
-
-
-
-
-
-
-
-
-
-
-'''
-with quantity_support():
-    plt.figure()
-    plt.semilogx(f, f)
-    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
-    plt.show()
-'''
-
