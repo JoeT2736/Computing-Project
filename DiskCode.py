@@ -328,7 +328,6 @@ plt.show()
 
 
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy 
@@ -337,7 +336,8 @@ from astropy import units as u
 from astropy.modeling.models import BlackBody
 from astropy import units as u
 from astropy.visualization import quantity_support
-
+import scipy
+from scipy import integrate
 
 
 
@@ -390,7 +390,7 @@ def Area(Radius):
   A[0, :] = np.pi * Radius[0]**2
   for i in range(1, len(Radius)):
     A[i, :] = np.pi * (Radius[i]**2 - Radius[i-1]**2)
-  return A
+  return A*u.m**2
 #print(Area(R_midpoints))
 
 
@@ -422,46 +422,76 @@ for t in Temp(MassBH, AccR, R_midpoints, Rin):
 #plt.show()
 
 
-for i in range(len(freq)):
-   for j in range(len(R_midpoints)):
-      L = F[]
+L = F * Area(R_midpoints)
+Lsum = np.sum(L, axis = 0)
+print(Lsum)
+plt.loglog(freq, Lsum)
+plt.ylim(10e3, 10e12)
+plt.show()
 
-
-L = F * Area(R_midpoints)*u.m**2
-print(L)
-#plt.loglog(freq, L)
-#plt.show()
-
-
-#for i in Temp(MassBH, AccR, R_midpoints, Rin):
-   #for j in range(len(Area(R_midpoints))):
-      #F2 = flux(i)
-      #print(F2)
-      #L = F2 * Area()
-      #print(L)
+#Ltot = scipy.integrate.trapezoid(Lsum, freq)
+#print(Ltot)
    
-  
-
-   
-#first set of F (constant T) * first element of area -> second * second 
-#for each set of F
-#gives luminosity for each ring
-#sum to get total luminosity?
-
 
 
 '''
 #Blackbody flux not using built in function
 def Flux(T):
-  a = (2 * np.pi * const.h * f**3)/(const.c**2)
-  b = ((const.h * f)/(const.k_B * T*u.k))
-  Fv = a/(np.exp(b) - 1)
-  return Fv
+    # Convert temperature array T to a 2D column vector with shape (Nrings, 1)
+    T_values = T.to(u.K).value.reshape(-1, 1) * u.K
+    
+    # Convert frequency array freq to a 2D row vector with shape (1, Fsteps)
+    freq_values = freq.value.reshape(1, -1) * u.Hz
+    
+    # Calculate the constant part `a` for each frequency
+    a = (2 * np.pi * const.h * freq_values**3) / (const.c**2)
+    
+    # Calculate the exponent part `b` for each temperature and frequency using broadcasting
+    b = (const.h * freq_values) / (const.k_B * T_values)
+    
+    # Use np.where to limit very large exponent values to prevent overflow
+    safe_b = np.where(b > 700, np.inf, b)  # Set cutoff, e.g., 700
+    Fv = np.where(safe_b == np.inf, 0, a / (np.expm1(safe_b)))  # np.expm1(safe_b) for stability
 
+    # Add units to the result
+    Fv = Fv 
+    
+    return Fv
+
+
+print(Flux(Temp(MassBH, AccR, R_midpoints, Rin)))
+
+
+L2 = (Flux(Temp(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints)
+L2sum = np.sum(L2, axis = 0)
+
+L2tot = scipy.integrate.trapezoid(L2sum, freq)
+#print(L2tot)
+'''
+
+
+'''
 for t2 in Temp(M, Mr, R_midpoints, Rin):
    F2 = Flux(t2)
    print(F2, t2)
    plt.semilogx(f, F2, label = t2)
 plt.legend()   
 plt.show()
+'''
+
+
+
+
+
+
+
+
+
+
+'''
+with quantity_support():
+    plt.figure()
+    plt.semilogx(f, f)
+    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
+    plt.show()
 '''
