@@ -48,7 +48,7 @@ Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
 Log_rin2 = np.log(rin2)
 Log_r2 = np.linspace(Log_rin2, Log_rout, Nrings)
 Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2 
-#gsaygfya
+
 #min/max efficiency of accretion rate to energy
 eta_min = 0.1
 eta_max = 0.4
@@ -434,7 +434,7 @@ plt.show()
    
 
 
-'''
+
 #Blackbody flux not using built in function
 def Flux(T):
     # Convert temperature array T to a 2D column vector with shape (Nrings, 1)
@@ -465,33 +465,19 @@ print(Flux(Temp(MassBH, AccR, R_midpoints, Rin)))
 L2 = (Flux(Temp(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints)
 L2sum = np.sum(L2, axis = 0)
 
+plt.loglog(freq, L2sum)
+plt.show()
+
+
 L2tot = scipy.integrate.trapezoid(L2sum, freq)
 #print(L2tot)
-'''
 
 
-'''
-for t2 in Temp(M, Mr, R_midpoints, Rin):
+
+
+for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
    F2 = Flux(t2)
    print(F2, t2)
    plt.semilogx(f, F2, label = t2)
 plt.legend()   
 plt.show()
-'''
-
-
-
-
-
-
-
-
-
-
-'''
-with quantity_support():
-    plt.figure()
-    plt.semilogx(f, f)
-    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
-    plt.show()
-'''
