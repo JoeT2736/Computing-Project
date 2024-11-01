@@ -48,7 +48,7 @@ Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
 Log_rin2 = np.log(rin2)
 Log_r2 = np.linspace(Log_rin2, Log_rout, Nrings)
 Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2 
-#gsaygfyasf
+#gsaygfya
 #min/max efficiency of accretion rate to energy
 eta_min = 0.1
 eta_max = 0.4
