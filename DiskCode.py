@@ -326,8 +326,6 @@ plt.show()
 
 
 
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy 
@@ -347,11 +345,11 @@ Mr2 = 10**14 *u.kg/(u.s*u.m**3)
 
 Fstart = 14 
 Fstop = 19
-Fsteps = 10
+Fsteps = 10000
 freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
 
 
-Nrings = 5
+Nrings = 1000
 Rg = (const.G * MassBH) / ((const.c)**2)  #Schwarzschild radius
 Rin = 6 * Rg   #Innermost stable orbit
 Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
@@ -424,10 +422,9 @@ for t in Temp(MassBH, AccR, R_midpoints, Rin):
 
 L = F * Area(R_midpoints)
 Lsum = np.sum(L, axis = 0)
-print(Lsum)
-plt.loglog(freq, Lsum)
-plt.ylim(10e3, 10e12)
-plt.show()
+#print(Lsum)
+
+
 
 #Ltot = scipy.integrate.trapezoid(Lsum, freq)
 #print(Ltot)
@@ -459,13 +456,23 @@ def Flux(T):
     return Fv
 
 
-print(Flux(Temp(MassBH, AccR, R_midpoints, Rin)))
+#print(Flux(Temp(MassBH, AccR, R_midpoints, Rin)))
 
 
 L2 = (Flux(Temp(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints)
 L2sum = np.sum(L2, axis = 0)
 
-plt.loglog(freq, L2sum)
+totL = scipy.integrate.trapezoid(Lsum, freq)
+TotL2 = scipy.integrate.trapezoid(L2sum, freq).to(u.J/u.s)
+
+
+print(f'Function L sum =: {totL}')
+print(f'Equation L sum =: {TotL2}')
+
+plt.loglog(freq, Lsum, label = 'Function')
+plt.ylim(10e3, 10e12)
+plt.loglog(freq, L2sum, label = 'Equation')
+plt.legend()
 plt.show()
 
 
@@ -474,10 +481,18 @@ L2tot = scipy.integrate.trapezoid(L2sum, freq)
 
 
 
-
+'''
 for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
    F2 = Flux(t2)
    print(F2, t2)
-   plt.semilogx(f, F2, label = t2)
+   plt.semilogx(freq, F2, label = t2)
 plt.legend()   
 plt.show()
+
+
+with quantity_support():
+    plt.figure()
+    plt.semilogx(f, f)
+    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
+    plt.show()
+'''
