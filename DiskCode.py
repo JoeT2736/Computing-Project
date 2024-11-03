@@ -349,7 +349,7 @@ Fsteps = 10000
 freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
 
 
-Nrings = 1000
+Nrings = 5000
 Rg = (const.G * MassBH) / ((const.c)**2)  #Schwarzschild radius
 Rin = 6 * Rg   #Innermost stable orbit
 Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
@@ -367,20 +367,21 @@ rout = Rout/Rg  #Scaled innermost stable orbit
 
 r = np.linspace(rin, rout, Nrings + 1)  
 r_midpoints = (r[:-1] + r[1:]) / 2  #Array of increasingly sized disks
+
 r2 = np.linspace(rin2, rout, Nrings + 1)  
 r_midpoints2 = (r2[:-1] + r2[1:]) / 2 
 
-'''
+
 Log_rin = np.log(rin)
 Log_rout = np.log(rout)
 
 Log_r = np.linspace(Log_rin, Log_rout, Nrings + 1)
-#Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
+Log_rMid = (Log_r[:-1] + Log_r[1:]) / 2  
 
 Log_rin2 = np.log(rin2)
 Log_r2 = np.linspace(Log_rin2, Log_rout, Nrings)
 Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2 
-'''
+
 
 #Area of each disk
 def Area(Radius):
@@ -392,21 +393,30 @@ def Area(Radius):
 #print(Area(R_midpoints))
 
 
-#Temperatue equation
-def Temp(M, Ar, Radius, RIN):
+def Temp2(M, Ar, Radius, RIN):
   a = (3 * const.G* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3)
   c = ( RIN / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
 
-#print(Temp(M, Mr, R_midpoints, Rin))
+
+#Temperatue equation
+def Temp(M, Ar, Radius, RIN):
+  a = (3 * const.G* M * Ar)
+  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3 * Rg**3)
+  c = ( RIN / Radius )**(1/2)
+  T = ((a / b) * (1 - c))**(1/4)
+  return T
+#print(Temp(MassBH, AccR, r_midpoints, rin))
 
 
+'''
 #Blackbody flux equation using built in function from astropy
 def flux(temp):
     bb = BlackBody(temp)
     return bb(freq)
+
 
 
 #fluxm = [[0 for _ in range(Fsteps)] for _ in range(Nrings)]
@@ -420,64 +430,73 @@ for t in Temp(MassBH, AccR, R_midpoints, Rin):
 #plt.show()
 
 
-L = F * Area(R_midpoints)
-Lsum = np.sum(L, axis = 0)
-#print(Lsum)
+#
+for t in Temp(MassBH, AccR, Log_rMid, Log_rin):
+   FL = flux(t)
+   FL = FL.to(u.W / (u.m**2 * u.Hz * u.sr))
+   #print(F)
+   #plt.semilogx(freq, F)
+#plt.show()
+'''
 
-
-
-#Ltot = scipy.integrate.trapezoid(Lsum, freq)
-#print(Ltot)
-   
+#LogL = F * Area(Log_rMid)
+#LogLsum = np.sum(LL, axis = 0)
 
 
 
 #Blackbody flux not using built in function
 def Flux(T):
-    # Convert temperature array T to a 2D column vector with shape (Nrings, 1)
-    T_values = T.to(u.K).value.reshape(-1, 1) * u.K
-    
-    # Convert frequency array freq to a 2D row vector with shape (1, Fsteps)
-    freq_values = freq.value.reshape(1, -1) * u.Hz
-    
-    # Calculate the constant part `a` for each frequency
-    a = (2 * np.pi * const.h * freq_values**3) / (const.c**2)
-    
-    # Calculate the exponent part `b` for each temperature and frequency using broadcasting
-    b = (const.h * freq_values) / (const.k_B * T_values)
-    
-    # Use np.where to limit very large exponent values to prevent overflow
-    safe_b = np.where(b > 700, np.inf, b)  # Set cutoff, e.g., 700
-    Fv = np.where(safe_b == np.inf, 0, a / (np.expm1(safe_b)))  # np.expm1(safe_b) for stability
-
-    # Add units to the result
-    Fv = Fv 
-    
-    return Fv
+   temps = T.reshape(-1, 1)
+   freqs = freq.reshape(1, -1)
+   a = (2 * np.pi *const.h * freqs**3)/(const.c**2)
+   b = (const.h * freqs)/(const.k_B * temps)
+   c = np.exp(b)
+   Fv = a/(c-1)
+   return Fv
 
 
-#print(Flux(Temp(MassBH, AccR, R_midpoints, Rin)))
+#print(Flux(Temp(MassBH, AccR, r_midpoints, rin)))
+
+#Using function
+#LL = F * Area(Log_rMid)
+#Lsum = np.sum(LL, axis = 0)
+#LogL = F * Area(Log_rMid)
+#LogLsum = np.sum(LL, axis = 0)
 
 
-L2 = (Flux(Temp(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints)
+#using equation
+L2 = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) 
 L2sum = np.sum(L2, axis = 0)
 
-totL = scipy.integrate.trapezoid(Lsum, freq)
-TotL2 = scipy.integrate.trapezoid(L2sum, freq).to(u.J/u.s)
+#LogL2 = (Flux(Temp(MassBH, AccR, Log_rMid, Log_rin))) * Area(Log_rMid) 
+#LogL2sum = np.sum(L2, axis = 0)
+
+#Using scaled radius R/Rg and equation
+Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints) 
+LscaledSum = np.sum(Lscaled, axis = 0)
 
 
-print(f'Function L sum =: {totL}')
-print(f'Equation L sum =: {TotL2}')
+#totL = scipy.integrate.trapezoid(Lsum, freq)
+TotL2 = scipy.integrate.trapezoid(L2sum, freq).to(u.W)
+TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
 
-plt.loglog(freq, Lsum, label = 'Function')
-plt.ylim(10e3, 10e12)
+#TotLogL2 = scipy.integrate.trapezoid(LogL2sum, freq).to(u.W)
+
+
+#print(f'Function L sum =: {totL}')
+print(f'(Equation) L sum =: {TotL2}')
+#print(f'Equation L sum =: {TotLogL2}')
+print(f'(Equation+scaled r) L sum =: {TotLscaled}')
+
+
+#plt.loglog(freq, Lsum, label = 'Function')
+plt.ylim(10e1, 10e13)
 plt.loglog(freq, L2sum, label = 'Equation')
+#plt.loglog(freq, LogL2sum, label = 'Equation')
+plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
 plt.legend()
 plt.show()
 
-
-L2tot = scipy.integrate.trapezoid(L2sum, freq)
-#print(L2tot)
 
 
 
