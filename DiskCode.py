@@ -1,3 +1,4 @@
+'''
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy 
@@ -65,7 +66,7 @@ Mr_edd_max = L_edd(M)/(eta_min * const.c.value**2)
 
 
 
-'''
+
 def Temp1(M, Mr, R_midpoints, Rin):
   T = (((3 * const.G.value * M * Mr) / (8 * np.pi * const.sigma_sb.value * R_midpoints**3)) * (1 - ( Rin / R_midpoints )**(1/2)))**(1/4)
   return T
@@ -120,7 +121,7 @@ plt.xlabel('Log(frequency)')
 plt.ylabel('Log(frequency*Luminosity)')
 plt.grid(True)
 plt.show()
-'''
+
 
 
 
@@ -296,7 +297,7 @@ print(f"Total Luminosity for no spin, 10e13Mr: {total_L3:.3e} W")
 
 
 
-'''
+
 plt.plot(r_midpoints, Temp(M, Mr, r_midpoints, rin))
 plt.xlim(-50, 3500)
 plt.title('Temperature of accretion disk at distance from innermost stable orbit (in terms of scaled units)')
@@ -309,7 +310,7 @@ plt.show()
 plt.plot(Log_rMid, Temp_Logs(M, Mr, Log_rMid, Log_rin))
 plt.title('Log(Temperature) of accretion disk at Log(distance) from centre')
 plt.show()
-'''
+
 
 plt.loglog(f, f*Lpf, label='Mr=10e15, Rin=6Rg')
 plt.loglog(f, f*Lpf2, label='Mr=10e15, Rin=1.2Rg')
@@ -322,7 +323,7 @@ plt.xlabel('Log(frequency)')
 plt.ylabel('Log(frequency*Luminosity)')
 plt.grid(True)
 plt.show()
-
+'''
 
 
 
@@ -343,7 +344,7 @@ MassBH = 10 * const.M_sun  #Mass of Black hole
 AccR = 10**15 *u.kg/u.s  #Accretion rate
 Mr2 = 10**14 *u.kg/(u.s*u.m**3)
 
-Fstart = 14 
+Fstart = 14
 Fstop = 19
 Fsteps = 10000
 freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
@@ -409,6 +410,16 @@ def Temp(M, Ar, Radius, RIN):
   T = ((a / b) * (1 - c))**(1/4)
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
+plt.figure(figsize=(10, 8))
+plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin))
+#plt.plot(r_midpoints, Temp(MassBH, AccR, r_midpoints, rin))
+plt.rc('axes', labelsize=16)
+plt.rc('legend', fontsize=16)
+plt.rc('axes', titlesize=16)
+plt.xlim(-4e4, 4e6)
+plt.ylabel('Temperature (K)')
+plt.xlabel('Distance from least stable orbit (m)')
+plt.show()
 
 
 '''
@@ -465,20 +476,25 @@ def Flux(T):
 
 
 #using equation
-L2 = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) 
+L2 = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) # * np.pi multiplying by pi gives 7e30W, why?, 
 L2sum = np.sum(L2, axis = 0)
+
+#equation and spinning black hole
+L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) # * np.pi 
+L3sum = np.sum(L3, axis = 0)
 
 #LogL2 = (Flux(Temp(MassBH, AccR, Log_rMid, Log_rin))) * Area(Log_rMid) 
 #LogL2sum = np.sum(L2, axis = 0)
 
 #Using scaled radius R/Rg and equation
-Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints) 
+Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints) * 2 #* 4 * np.pi #* Rg**2
 LscaledSum = np.sum(Lscaled, axis = 0)
 
 
 #totL = scipy.integrate.trapezoid(Lsum, freq)
 TotL2 = scipy.integrate.trapezoid(L2sum, freq).to(u.W)
 TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
+TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
 
 #TotLogL2 = scipy.integrate.trapezoid(LogL2sum, freq).to(u.W)
 
@@ -490,10 +506,17 @@ print(f'(Equation+scaled r) L sum =: {TotLscaled}')
 
 
 #plt.loglog(freq, Lsum, label = 'Function')
-plt.ylim(10e1, 10e13)
-plt.loglog(freq, L2sum, label = 'Equation')
+plt.figure(figsize=(10,6))
+plt.ylim(10e3, 10e13)
+plt.loglog(freq, L2sum, label = 'No spin')
+plt.loglog(freq, L3sum, label = 'Max spin')
 #plt.loglog(freq, LogL2sum, label = 'Equation')
-plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
+#plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
+plt.ylabel('Luminosity per unit frequency')
+plt.xlabel('Frequency')
+plt.rc('axes', labelsize=12)
+plt.rc('legend', fontsize=12)
+plt.rc('axes', titlesize=12)
 plt.legend()
 plt.show()
 
