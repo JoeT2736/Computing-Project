@@ -249,7 +249,7 @@ def L(M, Mr, Log_rin, Log_rout, Fstart, Fstop):
     return result
 
 
-def L2(M, Mr, Log_rin2, Log_rout, Fstart, Fstop):
+def LumMilestone(M, Mr, Log_rin2, Log_rout, Fstart, Fstop):
     
     result, _ = scipy.integrate.quad(Lf2, Fstart, Fstop, args=(M, Mr, Log_rin2, Log_rout))
     return result
@@ -281,7 +281,7 @@ Lpf4 = np.array([Lf4(freq, M, Mr_edd_min, Log_rin, Log_rout) for freq in f])
 Lpf5 = np.array([Lf5(freq, M, Mr_edd_max, Log_rin, Log_rout) for freq in f])
 
 total_L = L(M, Mr, Log_rin, Log_rout, Fstart, Fstop)
-total_L2 = L2(M, Mr, Log_rin2, Log_rout, Fstart, Fstop)
+total_LumMilestone = LumMilestone(M, Mr, Log_rin2, Log_rout, Fstart, Fstop)
 total_L3 = L3(M, Mr2, Log_rin, Log_rout, Fstart, Fstop)
 total_L4 = L(M, Mr_edd_min, Log_rin, Log_rout, Fstart, Fstop)
 total_L5 = L(M, Mr_edd_max, Log_rin, Log_rout, Fstart, Fstop)
@@ -290,7 +290,7 @@ print(f"Eddington limit of Luminosity for 10 solar mass: {L_edd(M):.3e} W")
 print(f"Total Luminosity for no spin, min eddington limit accretion rate: {total_L4:.3e} W")
 print(f"Total Luminosity for no spin, max eddington limit accretion rate: {total_L5:.3e} W")
 print(f"Total Luminosity for no spin, 10e15Mr: {total_L:.3e} W")
-print(f"Total Luminosity for max spin: {total_L2:.3e} W")
+print(f"Total Luminosity for max spin: {total_LumMilestone:.3e} W")
 print(f"Total Luminosity for no spin, 10e13Mr: {total_L3:.3e} W")
 
 
@@ -341,7 +341,9 @@ from scipy import integrate
 
 
 MassBH = 10 * const.M_sun  #Mass of Black hole
+MassS = const.M_sun
 AccR = 10**15 *u.kg/u.s  #Accretion rate
+AccR2 = 10**10 *u.kg/u.s
 Mr2 = 10**14 *u.kg/(u.s*u.m**3)
 
 Fstart = 14
@@ -410,17 +412,18 @@ def Temp(M, Ar, Radius, RIN):
   T = ((a / b) * (1 - c))**(1/4)
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
+'''
 plt.figure(figsize=(10, 8))
-plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin))
-#plt.plot(r_midpoints, Temp(MassBH, AccR, r_midpoints, rin))
-plt.rc('axes', labelsize=16)
-plt.rc('legend', fontsize=16)
-plt.rc('axes', titlesize=16)
+plt.plot(R_midpoints, Temp2(MassS, AccR, R_midpoints, Rin), label = 'sun')
+plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), label = 'BH')
 plt.xlim(-4e4, 4e6)
-plt.ylabel('Temperature (K)')
-plt.xlabel('Distance from least stable orbit (m)')
+plt.ylabel('Temperature (K)', fontsize=20)
+plt.xlabel('Distance from least stable orbit (m)', fontsize=20)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
+plt.legend()
 plt.show()
-
+'''
 
 '''
 #Blackbody flux equation using built in function from astropy
@@ -476,15 +479,23 @@ def Flux(T):
 
 
 #using equation
-L2 = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) # * np.pi multiplying by pi gives 7e30W, why?, 
-L2sum = np.sum(L2, axis = 0)
+LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) # * np.pi multiplying by pi gives 7e30W, why?, 
+LumMilestonesum = np.sum(LumMilestone, axis = 0)
+
+#
+LumSunMass = (Flux(Temp2(MassS, AccR, R_midpoints, Rin))) * Area(R_midpoints)
+LumSunMassSum = np.sum(LumSunMass, axis = 0)
+
+#
+LumSunMassSpin = (Flux(Temp2(MassS, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
+LumSunMassSumSpin = np.sum(LumSunMassSpin, axis = 0)
 
 #equation and spinning black hole
 L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) # * np.pi 
 L3sum = np.sum(L3, axis = 0)
 
-#LogL2 = (Flux(Temp(MassBH, AccR, Log_rMid, Log_rin))) * Area(Log_rMid) 
-#LogL2sum = np.sum(L2, axis = 0)
+#LogLumMilestone = (Flux(Temp(MassBH, AccR, Log_rMid, Log_rin))) * Area(Log_rMid) 
+#LogLumMilestonesum = np.sum(LumMilestone, axis = 0)
 
 #Using scaled radius R/Rg and equation
 Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints) * 2 #* 4 * np.pi #* Rg**2
@@ -492,32 +503,48 @@ LscaledSum = np.sum(Lscaled, axis = 0)
 
 
 #totL = scipy.integrate.trapezoid(Lsum, freq)
-TotL2 = scipy.integrate.trapezoid(L2sum, freq).to(u.W)
+TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq).to(u.W)
 TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
 TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
+TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
+TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
 
-#TotLogL2 = scipy.integrate.trapezoid(LogL2sum, freq).to(u.W)
+#TotLogLumMilestone = scipy.integrate.trapezoid(LogLumMilestonesum, freq).to(u.W)
 
 
 #print(f'Function L sum =: {totL}')
-print(f'(Equation) L sum =: {TotL2}')
-#print(f'Equation L sum =: {TotLogL2}')
+print(f'(Equation) L sum =: {TotLumMilestone}')
+#print(f'Equation L sum =: {TotLogLumMilestone}')
 print(f'(Equation+scaled r) L sum =: {TotLscaled}')
 
 
+
 #plt.loglog(freq, Lsum, label = 'Function')
+fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
 plt.ylim(10e3, 10e13)
-plt.loglog(freq, L2sum, label = 'No spin')
-plt.loglog(freq, L3sum, label = 'Max spin')
-#plt.loglog(freq, LogL2sum, label = 'Equation')
+MileStone, = plt.loglog(freq, LumMilestonesum, linestyle='-', color = 'blue')
+MaxSpin, = plt.loglog(freq, L3sum, linestyle='--', color = 'blue')
+SunMass, = plt.loglog(freq, LumSunMassSum, linestyle='-', color = 'red')
+SunMassSpin, = plt.loglog(freq, LumSunMassSumSpin, linestyle='--', color = 'red')
+
+no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
+max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
+
+# Colors for mass values
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label='M=10Msun')
+mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label='M=1Msun')
+
+# Add the legend with the custom handles
+plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun])
+
+#plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel('Luminosity per unit frequency')
-plt.xlabel('Frequency')
-plt.rc('axes', labelsize=12)
-plt.rc('legend', fontsize=12)
-plt.rc('axes', titlesize=12)
-plt.legend()
+plt.ylabel('Luminosity per unit frequency', fontsize=16)
+plt.xlabel('Frequency', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+#plt.legend([], ['No Spin', 'Max spin', 'M=10msun', 'M=msun'])
 plt.show()
 
 
