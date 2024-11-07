@@ -346,7 +346,7 @@ AccR = 10**15 *u.kg/u.s  #Accretion rate
 AccR2 = 10**10 *u.kg/u.s
 Mr2 = 10**14 *u.kg/(u.s*u.m**3)
 
-Fstart = 14
+Fstart = 13
 Fstop = 19
 Fsteps = 10000
 freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
@@ -490,6 +490,15 @@ LumSunMassSum = np.sum(LumSunMass, axis = 0)
 LumSunMassSpin = (Flux(Temp2(MassS, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumSunMassSumSpin = np.sum(LumSunMassSpin, axis = 0)
 
+#
+LumdAccr = (Flux(Temp2(MassBH, AccR2, R_midpoints, Rin))) * Area(R_midpoints)
+LumdAccrSum = np.sum(LumdAccr, axis = 0)
+
+#
+LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
+LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
+
+
 #equation and spinning black hole
 L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) # * np.pi 
 L3sum = np.sum(L3, axis = 0)
@@ -508,6 +517,8 @@ TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
 TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
 TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
 TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
+TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
+TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
 
 #TotLogLumMilestone = scipy.integrate.trapezoid(LogLumMilestonesum, freq).to(u.W)
 
@@ -525,23 +536,25 @@ plt.figure(figsize=(10,6))
 plt.ylim(10e3, 10e13)
 MileStone, = plt.loglog(freq, LumMilestonesum, linestyle='-', color = 'blue')
 MaxSpin, = plt.loglog(freq, L3sum, linestyle='--', color = 'blue')
-SunMass, = plt.loglog(freq, LumSunMassSum, linestyle='-', color = 'red')
-SunMassSpin, = plt.loglog(freq, LumSunMassSumSpin, linestyle='--', color = 'red')
+#SunMass, = plt.loglog(freq, LumSunMassSum, linestyle='-', color = 'red')
+#SunMassSpin, = plt.loglog(freq, LumSunMassSumSpin, linestyle='--', color = 'red')
+dAccr, = plt.loglog(freq, LumdAccrSum, linestyle='-', color = 'red')
+dAccrSpin, = plt.loglog(freq, LumdAccrSumSpin, linestyle='--', color = 'red')
 
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
 
 # Colors for mass values
-mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label='M=10Msun')
-mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label='M=1Msun')
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
+mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
 
 # Add the legend with the custom handles
 plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun])
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel('Luminosity per unit frequency', fontsize=16)
-plt.xlabel('Frequency', fontsize=16)
+plt.ylabel('Luminosity per unit frequency (W s$^{-1}$)', fontsize=16)
+plt.xlabel('Frequency (Hz)', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 #plt.legend([], ['No Spin', 'Max spin', 'M=10msun', 'M=msun'])
