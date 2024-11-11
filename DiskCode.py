@@ -325,7 +325,6 @@ plt.grid(True)
 plt.show()
 '''
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy 
@@ -356,21 +355,21 @@ Rg = (const.G * MassBH) / ((const.c)**2)  #Schwarzschild radius
 Rin = 6 * Rg   #Innermost stable orbit
 Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
 Rout = (10**5) * Rg   #Outermost orbit
-R = np.linspace(Rin, Rout, Nrings + 1)
-R2 = np.linspace(Rin2, Rout, Nrings + 1)
+R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1) 
+R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
 R_midpoints = ((R[1:] + R[:-1]) / 2) 
-R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) 
+R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) #midpoints for spinning blackhole
 
-
+#Logspace for rtadius
 
 rin = Rin/Rg  #Scaled innermost stable orbit
 rin2 = Rin2/Rg  #Scaled innermost stable orbit
 rout = Rout/Rg  #Scaled innermost stable orbit
 
-r = np.linspace(rin, rout, Nrings + 1)  
+r = np.logspace(rin, rout, Nrings + 1)  
 r_midpoints = (r[:-1] + r[1:]) / 2  #Array of increasingly sized disks
 
-r2 = np.linspace(rin2, rout, Nrings + 1)  
+r2 = np.logspace(rin2, rout, Nrings + 1)  
 r_midpoints2 = (r2[:-1] + r2[1:]) / 2 
 
 
@@ -395,6 +394,7 @@ def Area(Radius):
 #print(Area(R_midpoints))
 
 
+#for none scaled units (radius)
 def Temp2(M, Ar, Radius, RIN):
   a = (3 * const.G* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3)
@@ -403,7 +403,7 @@ def Temp2(M, Ar, Radius, RIN):
   return T
 
 
-#Temperatue equation
+#Temperatue equation for scaled units
 def Temp(M, Ar, Radius, RIN):
   a = (3 * const.G* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3 * Rg**3)
@@ -480,7 +480,7 @@ def Flux(T):
 
 
 #Milestone values
-LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) # * np.pi multiplying by pi gives 7e30W, why?, 
+LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) #* np.pi multiplying by pi gives 7e30W, why?, 
 LumMilestonesum = np.sum(LumMilestone, axis = 0)
 
 
@@ -519,12 +519,12 @@ LscaledSum = np.sum(Lscaled, axis = 0)
 
 #totL = scipy.integrate.trapezoid(Lsum, freq)
 TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq).to(u.W)
-#TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
-#TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
-#TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
-#TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
-#TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
-#TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
+TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
+TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
+TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
+TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
+TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
+TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
 #TotLogLumMilestone = scipy.integrate.trapezoid(LogLumMilestonesum, freq).to(u.W)
 
 
@@ -534,11 +534,11 @@ TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq).to(u.W)
 print(f'(Milestone) L sum =: {TotLumMilestone}')
 #print(f'Equation L sum =: {TotLogLumMilestone}')
 #print(f'(Equation+scaled r) L sum =: {TotLscaled}')
-print(f'(Milestone + spin) L sum =: {TotL3}')
-print(f'(Sun mass) L sum =: {TotLumSunMass}')
-print(f'(Sun mass + spin) L sum =: {TotLumSunMassSpin}')
-print(f'(D Accr) L sum =: {TotLumdAccr}')
-print(f'(D Accr + spin) L sum =: {TotLumdAccrSpin}')
+#print(f'(Milestone + spin) L sum =: {TotL3}')
+#print(f'(Sun mass) L sum =: {TotLumSunMass}')
+#print(f'(Sun mass + spin) L sum =: {TotLumSunMassSpin}')
+#print(f'(D Accr) L sum =: {TotLumdAccr}')
+#print(f'(D Accr + spin) L sum =: {TotLumdAccrSpin}')
 
 
 
@@ -546,13 +546,13 @@ print(f'(D Accr + spin) L sum =: {TotLumdAccrSpin}')
 #plt.loglog(freq, Lsum, label = 'Function')
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
-plt.ylim(10e3, 10e13)
-MileStone, = plt.loglog(freq, LumMilestonesum, linestyle='-', color = 'blue')
-MaxSpin, = plt.loglog(freq, L3sum, linestyle='--', color = 'blue')
+plt.ylim(10e20, 10e30)
+MileStone, = plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
+MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
 #SunMass, = plt.loglog(freq, LumSunMassSum, linestyle='-', color = 'green')
 #SunMassSpin, = plt.loglog(freq, LumSunMassSumSpin, linestyle='--', color = 'green')
-dAccr, = plt.loglog(freq, LumdAccrSum, linestyle='-', color = 'red')
-dAccrSpin, = plt.loglog(freq, LumdAccrSumSpin, linestyle='--', color = 'red')
+dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'red')
+dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'red')
 
 #Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
@@ -563,7 +563,7 @@ plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun])
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel('Luminosity per unit frequency (W s$^{-1}$)', fontsize=16)
+plt.ylabel('Luminosity per unit frequency (W Hz$^{-1}$)', fontsize=16)
 plt.xlabel('Frequency (Hz)', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
@@ -571,20 +571,5 @@ plt.show()
 
 
 
-
-
-'''
-for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
-   F2 = Flux(t2)
-   print(F2, t2)
-   plt.semilogx(freq, F2, label = t2)
-plt.legend()   
-plt.show()
-
-
-with quantity_support():
-    plt.figure()
-    plt.semilogx(f, f)
-    plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
-    plt.show()
-'''
+#plot blackbodies seperatly
+#make spectrums to location in ring, draw blackhole?
