@@ -325,8 +325,6 @@ plt.grid(True)
 plt.show()
 '''
 
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import astropy 
@@ -359,12 +357,14 @@ Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
 Rout = (10**5) * Rg   #Outermost orbit
 R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1) 
 R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
+R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1) 
+R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
 R_midpoints = ((R[1:] + R[:-1]) / 2) 
 R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) #midpoints for spinning blackhole
 
 #Logspace for radius
 
-
+#Logspace for rtadius
 
 rin = Rin/Rg  #Scaled innermost stable orbit
 rin2 = Rin2/Rg  #Scaled innermost stable orbit
@@ -399,6 +399,7 @@ def Area(Radius):
 
 
 #for none scaled units (radius)
+#for none scaled units (radius)
 def Temp2(M, Ar, Radius, RIN):
   a = (3 * const.G.to_value()* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
@@ -408,6 +409,7 @@ def Temp2(M, Ar, Radius, RIN):
 
 
 #Temperatue equation for scaled units
+#Temperatue equation for scaled units
 def Temp(M, Ar, Radius, RIN):
   a = (3 * const.G.to_value()* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3 * Rg**3)
@@ -415,6 +417,8 @@ def Temp(M, Ar, Radius, RIN):
   T = ((a / b) * (1 - c))**(1/4)
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
+
+
 
 
 '''
@@ -497,13 +501,16 @@ LumSunMass = (Flux(Temp2(MassS, AccR, R_midpoints, Rin))) * Area(R_midpoints)
 LumSunMassSum = np.sum(LumSunMass, axis = 0)
 
 #mass of sun with spin
+#mass of sun with spin
 LumSunMassSpin = (Flux(Temp2(MassS, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumSunMassSumSpin = np.sum(LumSunMassSpin, axis = 0)
 
 #Different accretion rate
+#Different accretion rate
 LumdAccr = (Flux(Temp2(MassBH, AccR2, R_midpoints, Rin))) * Area(R_midpoints)
 LumdAccrSum = np.sum(LumdAccr, axis = 0)
 
+#D Accr with spin
 #D Accr with spin
 LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
@@ -553,6 +560,7 @@ MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
 dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'red')
 dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'red')
 
+#Legend (linestyle and colour)
 #Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
