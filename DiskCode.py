@@ -519,12 +519,12 @@ LscaledSum = np.sum(Lscaled, axis = 0)
 
 #totL = scipy.integrate.trapezoid(Lsum, freq)
 TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq).to(u.W)
-TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
-TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
-TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
-TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
-TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
-TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
+#TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
+#TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
+#TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
+#TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
+#TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
+#TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
 #TotLogLumMilestone = scipy.integrate.trapezoid(LogLumMilestonesum, freq).to(u.W)
 
 
