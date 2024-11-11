@@ -340,27 +340,29 @@ from scipy import integrate
 
 
 
-MassBH = 10 * const.M_sun  #Mass of Black hole
-MassS = const.M_sun
-AccR = 10**15 *u.kg/u.s  #Accretion rate
-AccR2 = 10**10 *u.kg/u.s
-Mr2 = 10**14 *u.kg/(u.s*u.m**3)
+MassBH = 10 * const.M_sun.to_value()  #Mass of Black hole
+MassS = const.M_sun.to_value()
+AccR = 10**15 #*u.kg/u.s  #Accretion rate
+AccR2 = 10**10 #*u.kg/u.s
+Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 
 Fstart = 13
 Fstop = 19
-Fsteps = 10000
-freq = np.logspace(Fstart, Fstop, Fsteps) *u.Hz #Range of frequencies
+Fsteps = 1000
+freq = np.logspace(Fstart, Fstop, Fsteps) #*u.Hz #Range of frequencies
 
 
-Nrings = 5000
-Rg = (const.G * MassBH) / ((const.c)**2)  #Schwarzschild radius
+Nrings = 10000
+Rg = (const.G.to_value() * MassBH) / ((const.c.to_value())**2)  #Schwarzschild radius
 Rin = 6 * Rg   #Innermost stable orbit
 Rin2 = 1.2 * Rg   #Innermost stable orbit max spin
 Rout = (10**5) * Rg   #Outermost orbit
-R = np.linspace(Rin, Rout, Nrings + 1)
-R2 = np.linspace(Rin2, Rout, Nrings + 1)
+R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1) 
+R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
 R_midpoints = ((R[1:] + R[:-1]) / 2) 
-R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) 
+R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) #midpoints for spinning blackhole
+
+#Logspace for radius
 
 
 
@@ -368,10 +370,10 @@ rin = Rin/Rg  #Scaled innermost stable orbit
 rin2 = Rin2/Rg  #Scaled innermost stable orbit
 rout = Rout/Rg  #Scaled innermost stable orbit
 
-r = np.linspace(rin, rout, Nrings + 1)  
+r = np.logspace(np.log10(rin), np.log10(rout), Nrings + 1)  
 r_midpoints = (r[:-1] + r[1:]) / 2  #Array of increasingly sized disks
 
-r2 = np.linspace(rin2, rout, Nrings + 1)  
+r2 = np.logspace(np.log10(rin2), np.log10(rout), Nrings + 1)  
 r_midpoints2 = (r2[:-1] + r2[1:]) / 2 
 
 
@@ -389,29 +391,32 @@ Log_rMid2 = (Log_r2[:-1] + Log_r2[1:]) / 2
 #Area of each disk
 def Area(Radius):
   A = np.zeros((Nrings, Fsteps))
-  A[0, :] = np.pi * Radius[0]**2
+  A[0, :] = 2 * np.pi * Radius[0]**2
   for i in range(1, len(Radius)):
-    A[i, :] = np.pi * (Radius[i]**2 - Radius[i-1]**2)
-  return A*u.m**2
+    A[i, :] = 2 * np.pi * (Radius[i]**2 - Radius[i-1]**2)
+  return A #*u.m**2
 #print(Area(R_midpoints))
 
 
+#for none scaled units (radius)
 def Temp2(M, Ar, Radius, RIN):
-  a = (3 * const.G* M * Ar)
-  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3)
+  a = (3 * const.G.to_value()* M * Ar)
+  b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
   c = ( RIN / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
 
 
-#Temperatue equation
+#Temperatue equation for scaled units
 def Temp(M, Ar, Radius, RIN):
-  a = (3 * const.G* M * Ar)
-  b = (8 * np.pi * const.sigma_sb.to(u.kg /u.s**3 /u.K**4) * Radius**3 * Rg**3)
+  a = (3 * const.G.to_value()* M * Ar)
+  b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3 * Rg**3)
   c = ( RIN / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
+
+
 '''
 plt.figure(figsize=(10, 8))
 plt.plot(R_midpoints, Temp2(MassS, AccR, R_midpoints, Rin), label = 'sun')
@@ -462,8 +467,8 @@ for t in Temp(MassBH, AccR, Log_rMid, Log_rin):
 def Flux(T):
    temps = T.reshape(-1, 1)
    freqs = freq.reshape(1, -1)
-   a = (2 * np.pi *const.h * freqs**3)/(const.c**2)
-   b = (const.h * freqs)/(const.k_B * temps)
+   a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
+   b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
    c = np.exp(b)
    Fv = a/(c-1)
    return Fv
@@ -478,98 +483,104 @@ def Flux(T):
 #LogLsum = np.sum(LL, axis = 0)
 
 
-#using equation
-LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints) # * np.pi multiplying by pi gives 7e30W, why?, 
+#Milestone values
+LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints, Rin))) * Area(R_midpoints)  
 LumMilestonesum = np.sum(LumMilestone, axis = 0)
 
-#
+
+#milestone values, max spin black hole
+L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) 
+L3sum = np.sum(L3, axis = 0)
+
+#Object mass = mass of sun
 LumSunMass = (Flux(Temp2(MassS, AccR, R_midpoints, Rin))) * Area(R_midpoints)
 LumSunMassSum = np.sum(LumSunMass, axis = 0)
 
-#
+#mass of sun with spin
 LumSunMassSpin = (Flux(Temp2(MassS, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumSunMassSumSpin = np.sum(LumSunMassSpin, axis = 0)
 
-#
+#Different accretion rate
 LumdAccr = (Flux(Temp2(MassBH, AccR2, R_midpoints, Rin))) * Area(R_midpoints)
 LumdAccrSum = np.sum(LumdAccr, axis = 0)
 
-#
+#D Accr with spin
 LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
 
 
-#equation and spinning black hole
-L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) # * np.pi 
-L3sum = np.sum(L3, axis = 0)
 
-#LogLumMilestone = (Flux(Temp(MassBH, AccR, Log_rMid, Log_rin))) * Area(Log_rMid) 
-#LogLumMilestonesum = np.sum(LumMilestone, axis = 0)
+
+
 
 #Using scaled radius R/Rg and equation
-Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints) * 2 #* 4 * np.pi #* Rg**2
+Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints)  
 LscaledSum = np.sum(Lscaled, axis = 0)
 
 
-#totL = scipy.integrate.trapezoid(Lsum, freq)
-TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq).to(u.W)
-TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq).to(u.W)
-TotL3 = scipy.integrate.trapezoid(L3sum, freq).to(u.W)
-TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq).to(u.W)
-TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq).to(u.W)
-TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq).to(u.W)
-TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq).to(u.W)
 
-#TotLogLumMilestone = scipy.integrate.trapezoid(LogLumMilestonesum, freq).to(u.W)
-
-
-#print(f'Function L sum =: {totL}')
-print(f'(Equation) L sum =: {TotLumMilestone}')
-#print(f'Equation L sum =: {TotLogLumMilestone}')
-print(f'(Equation+scaled r) L sum =: {TotLscaled}')
+TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq)*u.W  #.to(u.W)
+TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq)*u.W  #.to(u.W)
+TotL3 = scipy.integrate.trapezoid(L3sum, freq)*u.W  #.to(u.W)
+TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq)*u.W  #.to(u.W)
+TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq)*u.W  #.to(u.W)
+TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq)*u.W  #.to(u.W)
+TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W)
 
 
 
-#plt.loglog(freq, Lsum, label = 'Function')
+
+
+print(f'(Milestone) L sum = {TotLumMilestone}')
+print(f'(Equation+scaled r) L sum = {TotLscaled}')
+print(f'(Milestone + spin) L sum = {TotL3}')
+print(f'(Sun mass) L sum = {TotLumSunMass}')
+print(f'(Sun mass + spin) L sum = {TotLumSunMassSpin}')
+print(f'(D Accr) L sum = {TotLumdAccr}')
+print(f'(D Accr + spin) L sum = {TotLumdAccrSpin}')
+
+
+
+
+
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
-plt.ylim(10e3, 10e13)
-MileStone, = plt.loglog(freq, LumMilestonesum, linestyle='-', color = 'blue')
-MaxSpin, = plt.loglog(freq, L3sum, linestyle='--', color = 'blue')
-#SunMass, = plt.loglog(freq, LumSunMassSum, linestyle='-', color = 'red')
-#SunMassSpin, = plt.loglog(freq, LumSunMassSumSpin, linestyle='--', color = 'red')
-dAccr, = plt.loglog(freq, LumdAccrSum, linestyle='-', color = 'red')
-dAccrSpin, = plt.loglog(freq, LumdAccrSumSpin, linestyle='--', color = 'red')
+plt.ylim(10e20, 10e31)
+MileStone, = plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
+MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
+#SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
+#SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
+dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'red')
+dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'red')
 
+#Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
-
-# Colors for mass values
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
 mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
-
-# Add the legend with the custom handles
 plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun])
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel('Luminosity per unit frequency (W s$^{-1}$)', fontsize=16)
+plt.ylabel('Luminosity (W)', fontsize=16)
 plt.xlabel('Frequency (Hz)', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
-#plt.legend([], ['No Spin', 'Max spin', 'M=10msun', 'M=msun'])
 plt.show()
 
 
-
+#plot each blackbodies on same plot
+#make spectrums to location in ring, draw blackhole?
 
 '''
+
 for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
    F2 = Flux(t2)
    print(F2, t2)
    plt.semilogx(freq, F2, label = t2)
 plt.legend()   
 plt.show()
+
 
 
 with quantity_support():
