@@ -418,19 +418,25 @@ def Temp(M, Ar, Radius, RIN):
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
 
+#Temp without viscous forces
+def Temp3(M, Ar, Radius):
+  a = (const.G.to_value()* M * Ar)
+  b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
+  T = (a / b)**(1/4)
+  return T
 
 
 
 '''
 plt.figure(figsize=(10, 8))
-plt.plot(R_midpoints, Temp2(MassS, AccR, R_midpoints, Rin), label = 'sun')
-plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), label = 'BH')
-plt.xlim(-4e4, 4e6)
+plt.plot(R_midpoints, Temp3(MassBH, AccR, R_midpoints), label = 'Non-Viscous')
+plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), label = 'Viscous')
+plt.xlim(0, 2e6)
 plt.ylabel('Temperature (K)', fontsize=20)
-plt.xlabel('Distance from least stable orbit (m)', fontsize=20)
+plt.xlabel('Distance from innermost stable orbit (m)', fontsize=20)
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
-plt.legend()
+plt.legend(fontsize=16)
 plt.show()
 '''
 
@@ -567,7 +573,7 @@ print(spectra)
 
 #spectra = Flux(5000)
 
-
+'''
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
 plt.ylim(10e20, 10e31)
@@ -596,13 +602,45 @@ plt.xlabel('Frequency (Hz)', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.show()
-
+'''
 
 #plot each blackbodies on same plot
 #make spectrums to location in ring, draw blackhole?
 
-'''
 
+
+fig, ax = plt.subplots()
+plt.figure(figsize=(10,6))
+plt.ylim(20, 32)
+#for i, temp in enumerate(Temp2(MassBH, AccR, R_midpoints, Rin)):
+  #plt.loglog(freq, freq * spectra[i], label=f'{temp} K')
+
+MileStone, = plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color = 'blue')
+MaxSpin, = plt.plot(np.log10(freq), np.log10(freq * L3sum), linestyle='--', color = 'blue')
+#SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
+#SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
+dAccr, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color = 'red')
+dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle='--', color = 'red')
+
+#Legend (linestyle and colour)
+#Legend (linestyle and colour)
+no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
+max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
+mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
+plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun], fontsize=12)
+
+#plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
+#plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
+plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
+plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.show()
+
+
+
+'''
 for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
    F2 = Flux(t2)
    print(F2, t2)
@@ -620,19 +658,23 @@ with quantity_support():
 '''
 
 
-
+'''
 plt.figure(figsize=(10,6))
-plt.ylim(10e20, 10e31)
-index = [500, 2500, 5500, 7500, 9500]
-for j in index:
+plt.ylim(20, 32)
+index = [100, 2000, 3500, 5000, 6500, 8000, 9500]
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+for j, color in zip(index, colors):
   #print(Flux(Te[i]))
   L = Flux(Te[j]) * areas[j]
   Lsum = np.sum(L, axis = 0)
-  plt.loglog(freq, freq * Lsum, color = 'black')
-plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
-plt.ylabel('Luminosity (W)', fontsize=16)
-plt.xlabel('Frequency (Hz)', fontsize=16)
+  temp_label = f'{Te[j]:.2g}'
+  temp_label = temp_label.replace('e+0',r'\times 10^{')+'}'
+  plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color = color, label = f'${temp_label}$ K')
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color = 'black')
+plt.legend(fontsize=12)
+plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
+plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.show()
-
+'''
