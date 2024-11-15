@@ -406,7 +406,7 @@ def Temp2(M, Ar, Radius, RIN):
   c = ( RIN / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
-
+#print(Temp2(MassBH, AccR, R_midpoints, Rin))
 
 #Temperatue equation for scaled units
 #Temperatue equation for scaled units
@@ -436,12 +436,13 @@ plt.show()
 
 '''
 #Blackbody flux equation using built in function from astropy
-def flux(temp):
-    bb = BlackBody(temp)
+def flux(Temp):
+    bb = BlackBody(Temp*u.K)
     return bb(freq)
+'''
 
 
-
+'''
 #fluxm = [[0 for _ in range(Fsteps)] for _ in range(Nrings)]
 
 #Blackbody flux at each temperature in Temperature equation 
@@ -478,6 +479,12 @@ def Flux(T):
    return Fv
 
 
+
+Te = Temp2(MassBH, AccR, R_midpoints, Rin)
+areas = Area(R_midpoints)
+
+
+
 #print(Flux(Temp(MassBH, AccR, r_midpoints, rin)))
 
 #Using function
@@ -485,6 +492,8 @@ def Flux(T):
 #Lsum = np.sum(LL, axis = 0)
 #LogL = F * Area(Log_rMid)
 #LogLsum = np.sum(LL, axis = 0)
+
+
 
 
 #Milestone values
@@ -537,7 +546,7 @@ TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W
 
 
 
-
+'''
 print(f'(Milestone) L sum = {TotLumMilestone}')
 print(f'(Equation+scaled r) L sum = {TotLscaled}')
 print(f'(Milestone + spin) L sum = {TotL3}')
@@ -545,14 +554,26 @@ print(f'(Sun mass) L sum = {TotLumSunMass}')
 print(f'(Sun mass + spin) L sum = {TotLumSunMassSpin}')
 print(f'(D Accr) L sum = {TotLumdAccr}')
 print(f'(D Accr + spin) L sum = {TotLumdAccrSpin}')
+'''
+'''
+spectra = []
+for temp in Temp2(MassBH, AccR, R_midpoints, Rin):
+  area = Area(R_midpoints)
+  spectra.append(Flux(temp) * area)
+
+print(spectra)
+'''
 
 
-
+#spectra = Flux(5000)
 
 
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
 plt.ylim(10e20, 10e31)
+#for i, temp in enumerate(Temp2(MassBH, AccR, R_midpoints, Rin)):
+  #plt.loglog(freq, freq * spectra[i], label=f'{temp} K')
+
 MileStone, = plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
 MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
 #SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
@@ -597,3 +618,21 @@ with quantity_support():
     plt.axvline(bb.nu_max.to(u.Hz, equivalencies=u.spectral()).value, ls='--')
     plt.show()
 '''
+
+
+
+plt.figure(figsize=(10,6))
+plt.ylim(10e20, 10e31)
+index = [500, 2500, 5500, 7500, 9500]
+for j in index:
+  #print(Flux(Te[i]))
+  L = Flux(Te[j]) * areas[j]
+  Lsum = np.sum(L, axis = 0)
+  plt.loglog(freq, freq * Lsum, color = 'black')
+plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
+plt.ylabel('Luminosity (W)', fontsize=16)
+plt.xlabel('Frequency (Hz)', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.show()
+
