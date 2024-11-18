@@ -622,7 +622,7 @@ plt.show()
 #make spectrums to location in ring, draw blackhole?
 
 
-'''
+
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
 plt.xlim(11, 19)
@@ -631,19 +631,21 @@ plt.ylim(15, 32)
   #plt.loglog(freq, freq * spectra[i], label=f'{temp} K')
 
 MileStone, = plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color = 'blue')
-MaxSpin, = plt.plot(np.log10(freq), np.log10(freq * L3sum), linestyle='--', color = 'blue')
+MaxSpin, = plt.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color = 'blue')
+NonVisous, = plt.plot(np.log10(freq), np.log10(freq * Lsum_non_viscous), linestyle='--', color='red', label='Non-Viscous')
 #SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
 #SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
 dAccr, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color = 'green')
-dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle='--', color = 'green')
+dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle=':', color = 'green')
 
 #Legend (linestyle and colour)
 #Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
-max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
+max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
+max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='Non-Viscous')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
 mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
-plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun], fontsize=12)
+plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
@@ -652,9 +654,9 @@ plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.show()
+
+
 '''
-
-
 plt.figure(figsize=(10, 6))
 plt.xlim(11, 19)
 plt.ylim(15, 32)
@@ -668,7 +670,7 @@ plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.legend(fontsize=14)
 plt.show()
-
+'''
 
 '''
 for t2 in Temp(MassBH, AccR, R_midpoints, Rin):
