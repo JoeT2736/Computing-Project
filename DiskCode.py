@@ -344,7 +344,7 @@ AccR = 10**15 #*u.kg/u.s  #Accretion rate
 AccR2 = 10**10 #*u.kg/u.s
 Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 
-Fstart = 13
+Fstart = 10
 Fstop = 19
 Fsteps = 1000
 freq = np.logspace(Fstart, Fstop, Fsteps) #*u.Hz #Range of frequencies
@@ -425,15 +425,18 @@ def Temp3(M, Ar, Radius):
   T = (a / b)**(1/4)
   return T
 
+#T2 = Temp2(MassBH, AccR, R_midpoints, Rin)
+#T3 = Temp3(MassBH, AccR, R_midpoints)
 
+#print(T2[5000], T3[5000])
 
 '''
 plt.figure(figsize=(10, 8))
-plt.plot(R_midpoints, Temp3(MassBH, AccR, R_midpoints), label = 'Non-Viscous')
-plt.plot(R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), label = 'Viscous')
-plt.xlim(0, 2e6)
+plt.plot(Rin + R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), color = 'blue', label = 'Viscous')
+plt.plot(Rin + R_midpoints, Temp3(MassBH, AccR, R_midpoints), color = 'red', label = 'Non-Viscous')
+plt.xlim(0, 4e6)
 plt.ylabel('Temperature (K)', fontsize=20)
-plt.xlabel('Distance from innermost stable orbit (m)', fontsize=20)
+plt.xlabel('Distance from centre of Black hole (m)', fontsize=20)
 plt.xticks(fontsize=16)
 plt.yticks(fontsize=16)
 plt.legend(fontsize=16)
@@ -486,9 +489,6 @@ def Flux(T):
 
 
 
-Te = Temp2(MassBH, AccR, R_midpoints, Rin)
-areas = Area(R_midpoints)
-
 
 
 #print(Flux(Temp(MassBH, AccR, r_midpoints, rin)))
@@ -530,14 +530,24 @@ LumdAccrSum = np.sum(LumdAccr, axis = 0)
 LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
 
+#Luminosity eddington limit
+def L_edd(M):
+  return (4 * np.pi * const.G.value * M * const.m_p.value * const.c.value)/const.sigma_T.value
 
+eta = 0.4  #efficierncy of accretion i guess
 
+#max accretion rate
+Max_AccR = L_edd(MassBH)/(eta * const.c.value**2)
 
 
 
 #Using scaled radius R/Rg and equation
 Lscaled = (Flux(Temp(MassBH, AccR, r_midpoints, rin))) * Area(r_midpoints)  
 LscaledSum = np.sum(Lscaled, axis = 0)
+
+
+L_non_viscous = Flux((Temp3(MassBH, AccR, R_midpoints))) * Area(R_midpoints) 
+Lsum_non_viscous = np.sum(L_non_viscous, axis=0)
 
 
 
@@ -548,9 +558,12 @@ TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq)*u.W  #.to(u.W)
 TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq)*u.W  #.to(u.W)
 TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq)*u.W  #.to(u.W)
 TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W)
+TotLumMilestone2 = scipy.integrate.trapezoid(Lsum_non_viscous, freq)*u.W  #.to(u.W)
 
 
-
+print(f'(Milestone) L sum = {TotLumMilestone}')
+print(f'(1) L sum = {TotLumMilestone2}')
+print(TotLumMilestone2/TotLumMilestone)
 
 '''
 print(f'(Milestone) L sum = {TotLumMilestone}')
@@ -584,15 +597,16 @@ MileStone, = plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'bl
 MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
 #SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
 #SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
-dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'red')
-dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'red')
+dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'green')
+dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'green')
+
 
 #Legend (linestyle and colour)
 #Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
-mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
 plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun])
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
@@ -608,10 +622,11 @@ plt.show()
 #make spectrums to location in ring, draw blackhole?
 
 
-
+'''
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
-plt.ylim(20, 32)
+plt.xlim(11, 19)
+plt.ylim(15, 32)
 #for i, temp in enumerate(Temp2(MassBH, AccR, R_midpoints, Rin)):
   #plt.loglog(freq, freq * spectra[i], label=f'{temp} K')
 
@@ -619,25 +634,40 @@ MileStone, = plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyl
 MaxSpin, = plt.plot(np.log10(freq), np.log10(freq * L3sum), linestyle='--', color = 'blue')
 #SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
 #SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
-dAccr, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color = 'red')
-dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle='--', color = 'red')
+dAccr, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color = 'green')
+dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle='--', color = 'green')
 
 #Legend (linestyle and colour)
 #Legend (linestyle and colour)
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Max Spin')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
-mass_1msun = plt.Line2D([0], [0], color='red', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
 plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun], fontsize=12)
 
 #plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
 #plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
-plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.show()
+'''
 
+
+plt.figure(figsize=(10, 6))
+plt.xlim(11, 19)
+plt.ylim(15, 32)
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum),  linestyle='-', color='blue', label='Viscous')
+plt.plot(np.log10(freq), np.log10(freq * Lsum_non_viscous), linestyle='-', color='red', label='Non-Viscous')
+
+# Add labels and legend
+plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.legend(fontsize=14)
+plt.show()
 
 
 '''
@@ -657,24 +687,125 @@ with quantity_support():
     plt.show()
 '''
 
+''''
+Te = Temp2(MassBH, AccR, R_midpoints, Rin)
+areas = Area(R_midpoints)
 
-'''
-plt.figure(figsize=(10,6))
-plt.ylim(20, 32)
-index = [100, 2000, 3500, 5000, 6500, 8000, 9500]
+plt.figure(figsize=(10, 6))
+plt.xlim(11, 19)
+plt.ylim(15, 32)
+index2 = [100, 2000, 3500, 5000, 6500, 8000, 9500]
 colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-for j, color in zip(index, colors):
-  #print(Flux(Te[i]))
-  L = Flux(Te[j]) * areas[j]
-  Lsum = np.sum(L, axis = 0)
-  temp_label = f'{Te[j]:.2g}'
-  temp_label = temp_label.replace('e+0',r'\times 10^{')+'}'
-  plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color = color, label = f'${temp_label}$ K')
-plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color = 'black')
+for j, color in zip(index2, colors):
+    L = Flux(Te[j]) * areas[j]
+    Lsum = np.sum(L, axis=0)
+    temp_label = f'{Te[j]:.2g}'
+    temp_label = temp_label.replace('e+0', r'\times 10^{').replace('e-0', r'\times 10^{-') + '}'
+    plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'${temp_label}$ K')
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black')
 plt.legend(fontsize=12)
-plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
-plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.show()
 '''
+
+'''
+accretion_rates1 = [0.1 * Max_AccR, 0.5 * Max_AccR, Max_AccR, 2 * Max_AccR]
+accretion_rates2 = np.logspace(np.log10(0.01 * Max_AccR), np.log10(2000 * Max_AccR), 5)
+
+# Define a list of colors
+colors = ['red', 'orange', 'green', 'blue']
+
+# Plot the luminosity spectrum for each accretion rate
+plt.figure(figsize=(10, 6))
+plt.xlim(13, 19)
+plt.ylim(20, 35)
+for Ar, color in zip(accretion_rates1, colors):
+    Te = Temp2(MassBH, Ar, R_midpoints, Rin)
+    areas = Area(R_midpoints)
+    L = Flux(Te) * areas
+    Lsum = np.sum(L, axis=0)
+    acc_label = f'{Ar:.2e}'
+    acc_label = acc_label.replace('e+0', r'\times 10^{').replace('e', r'\times 10^{').replace('+', '') + '}'
+    plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'Accretion Rate: ${acc_label}$ kg/s')
+
+# Assuming LumMilestonesum is defined elsewhere in your code
+# Plot the black line for comparison
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label='Milestone')
+
+# Add labels and legend
+plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.legend(fontsize=14)
+plt.show()
+'''
+
+'''
+masses = np.logspace(np.log10(const.M_sun.to_value()), np.log10(100 * const.M_sun.to_value()), 5)
+
+# Define a list of colors
+colors = ['red', 'orange', 'yellow', 'green', 'blue']
+
+# Plot the luminosity spectrum for each Eddington-limited accretion rate
+plt.figure(figsize=(10, 6))
+plt.xlim(11, 19)
+plt.ylim(15, 37)
+for M, color in zip(masses, colors):
+    Max_AccR = L_edd(M) / (0.4 * const.c.value**2)  # Eddington-limited accretion rate
+    Te = Temp2(M, Max_AccR, R_midpoints, Rin)
+    areas = Area(R_midpoints)
+    L = Flux(Te) * areas
+    Lsum = np.sum(L, axis=0)
+    mass_label = f'{M:.2e}'
+    mass_label = mass_label.replace('e+0', r'\times 10^{').replace('e', r'\times 10^{').replace('+', '') + '}'
+    plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'Mass:${mass_label}$ kg')
+
+# Assuming LumMilestonesum is defined elsewhere in your code
+# Plot the black line for comparison
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label='Milestone')
+
+# Add labels and legend
+plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.legend(fontsize=14)
+plt.show()
+'''
+
+'''
+masses = np.logspace(np.log10(10 * const.M_sun.to_value()), np.log10(1000900 * const.M_sun.to_value()), 5)
+
+# Define a list of colors
+colors = ['red', 'orange', 'yellow', 'green', 'blue']
+
+# Plot the luminosity spectrum for each black hole mass
+plt.figure(figsize=(10, 6))
+plt.xlim(11, 25)
+plt.ylim(15, 40)
+for M, color in zip(masses, colors):
+    Te = Temp2(M, AccR, R_midpoints, Rin)
+    areas = Area(R_midpoints)
+    L = Flux(Te) * areas
+    Lsum = np.sum(L, axis=0)
+    mass_label = f'{M:.1e}'
+    mass_label = mass_label.replace('e+0', r'\times 10^{').replace('e+0', r'\times 10^{').replace('e', r'\times 10^{').replace('+', '') + '}'
+    plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'Mass: ${mass_label}$ kg')
+
+# Assuming LumMilestonesum is defined elsewhere in your code
+# Plot the black line for comparison
+plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label='Milestone')
+
+# Add labels and legend
+plt.xlabel(r'$\log_{10}(f)$ Hz', fontsize=16)
+plt.ylabel(r'$\log_{10}(fL_f)$ W', fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.legend(fontsize=14)
+plt.show()
+'''
+
