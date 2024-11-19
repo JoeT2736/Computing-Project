@@ -430,6 +430,46 @@ def Temp3(M, Ar, Radius):
 
 #print(T2[5000], T3[5000])
 
+
+#trying to make black hole image
+'''
+def DiscHeight(Radius):
+    H = 0.05 * Radius  # Example: height is 5% of the radius
+    return H
+H = DiscHeight(R_midpoints)
+
+Te_viscous = Temp2(MassBH, AccR, R_midpoints, Rin)
+Te_non_viscous = Temp3(MassBH, AccR, R_midpoints)
+
+fig, ax1 = plt.subplots(figsize=(10, 6))
+
+# Plot the temperature profiles
+ax1.plot(Rin + R_midpoints, Te_viscous, color='blue', label='Viscous')
+ax1.plot(-(Rin + R_midpoints), Te_viscous, color='blue', linestyle='-')
+ax1.plot(Rin + R_midpoints, Te_non_viscous, color='red', label='Non-Viscous')
+ax1.plot(-(Rin + R_midpoints), Te_non_viscous, color='red', linestyle='-')
+ax1.set_xlim(-4e6, 4e6)
+ax1.set_ylabel('Temperature (K)', fontsize=20)
+ax1.tick_params(axis='both', which='major', labelsize=16)
+ax1.legend(loc='upper left', fontsize=16)
+
+# Create a secondary y-axis for the accretion disc shape
+ax2 = ax1.twinx()
+ax2.fill_between(Rin + R_midpoints, -H, H, color='gray', alpha=0.5)
+ax2.fill_between(-(Rin + R_midpoints), -H, H, color='gray', alpha=0.5)
+ax2.set_ylim(-1.1 * np.max(H), 1.1 * np.max(H))
+ax2.set_ylabel('Disc Height (m)', fontsize=20)
+ax2.tick_params(axis='both', which='major', labelsize=16)
+
+# Set the x-axis label
+ax1.set_xlabel('Distance from centre of Black hole (m)', fontsize=20)
+
+# Show the plot
+plt.tight_layout()
+plt.show()
+'''
+
+
 '''
 plt.figure(figsize=(10, 8))
 plt.plot(Rin + R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), color = 'blue', label = 'Viscous')
@@ -561,9 +601,9 @@ TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W
 TotLumMilestone2 = scipy.integrate.trapezoid(Lsum_non_viscous, freq)*u.W  #.to(u.W)
 
 
-print(f'(Milestone) L sum = {TotLumMilestone}')
-print(f'(1) L sum = {TotLumMilestone2}')
-print(TotLumMilestone2/TotLumMilestone)
+#print(f'(Milestone) L sum = {TotLumMilestone}')
+#print(f'(1) L sum = {TotLumMilestone2}')
+#print(TotLumMilestone2/TotLumMilestone)
 
 '''
 print(f'(Milestone) L sum = {TotLumMilestone}')
@@ -586,6 +626,8 @@ print(spectra)
 
 #spectra = Flux(5000)
 
+
+#dont use this one
 '''
 fig, ax = plt.subplots()
 plt.figure(figsize=(10,6))
@@ -623,36 +665,48 @@ plt.show()
 
 
 
-fig, ax = plt.subplots()
-plt.figure(figsize=(10,6))
-plt.xlim(11, 19)
-plt.ylim(15, 32)
-#for i, temp in enumerate(Temp2(MassBH, AccR, R_midpoints, Rin)):
-  #plt.loglog(freq, freq * spectra[i], label=f'{temp} K')
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
 
-MileStone, = plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color = 'blue')
-MaxSpin, = plt.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color = 'blue')
-NonVisous, = plt.plot(np.log10(freq), np.log10(freq * Lsum_non_viscous), linestyle='--', color='red', label='Non-Viscous')
-#SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
-#SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
-dAccr, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color = 'green')
-dAccrSpin, = plt.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle=':', color = 'green')
+ax1.set_xlim(11, 19)
+ax1.set_ylim(15, 32)
 
-#Legend (linestyle and colour)
-#Legend (linestyle and colour)
+MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='blue')
+MaxSpin, = ax1.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color='blue')
+NonVisous, = ax1.plot(np.log10(freq), np.log10(freq * Lsum_non_viscous), linestyle='--', color='red', label='Non-Viscous')
+dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color='green')
+dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle=':', color='green')
+
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
 max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='Non-Viscous')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
 mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
-plt.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
+ax1.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
 
-#plt.loglog(freq, LogLumMilestonesum, label = 'Equation')
-#plt.loglog(freq, LscaledSum, label = 'Equation, Scaled r')
-plt.ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
-plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
-plt.xticks(fontsize=14)
-plt.yticks(fontsize=14)
+ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
+ax1.tick_params(axis='x', labelsize=14)
+ax1.tick_params(axis='y', labelsize=14)
+
+# Create a secondary x-axis
+ax2 = ax1.twiny()
+
+freq_ticks = ax1.get_xticks()
+
+# Convert frequency ticks to wavelength ticks
+wavelength_ticks = np.log10(const.c.value / (10**freq_ticks))
+
+# Create custom labels
+custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_ticks]
+
+# Set the secondary x-axis limits and labels
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(freq_ticks)
+ax2.set_xticklabels(custom_labels)
+ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
+ax2.tick_params(axis='x', labelsize=14)
+
 plt.show()
 
 
