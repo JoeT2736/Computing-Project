@@ -337,15 +337,15 @@ import scipy
 from scipy import integrate
 
 
-
-MassBH = 10 * const.M_sun.to_value()  #Mass of Black hole
-MassS = const.M_sun.to_value()
+MassSMBH =  10**9 * const.M_sun.to_value()
+MassBH =  10 * const.M_sun.to_value()  #Mass of Black hole
+Mass2 = 10**4 * const.M_sun.to_value()
 AccR = 10**15 #*u.kg/u.s  #Accretion rate
 AccR2 = 10**10 #*u.kg/u.s
 Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 
 Fstart = 10
-Fstop = 19
+Fstop = 25
 Fsteps = 1000
 freq = np.logspace(Fstart, Fstop, Fsteps) #*u.Hz #Range of frequencies
 
@@ -359,8 +359,8 @@ R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1)
 R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
 R = np.logspace(np.log10(Rin), np.log10(Rout), Nrings + 1) 
 R2 = np.logspace(np.log10(Rin2), np.log10(Rout), Nrings + 1)
-R_midpoints = ((R[1:] + R[:-1]) / 2) 
-R_midpoints2 = ((R2[:-1] + R2[1:]) / 2) #midpoints for spinning blackhole
+R_midpoints = 10**((np.log10(R[1:]) + np.log10(R[:-1])) / 2) 
+R_midpoints2 = 10**((np.log10(R2[:-1]) + np.log10(R2[1:])) / 2) #midpoints for spinning blackhole
 
 #Logspace for radius
 
@@ -470,18 +470,23 @@ plt.show()
 '''
 
 
-'''
-plt.figure(figsize=(10, 8))
-plt.plot(Rin + R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), color = 'blue', label = 'Viscous')
-plt.plot(Rin + R_midpoints, Temp3(MassBH, AccR, R_midpoints), color = 'red', label = 'Non-Viscous')
-plt.xlim(0, 4e6)
-plt.ylabel('Temperature (K)', fontsize=20)
-plt.xlabel('Distance from centre of Black hole (m)', fontsize=20)
-plt.xticks(fontsize=16)
-plt.yticks(fontsize=16)
-plt.legend(fontsize=16)
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 8)
+
+fig.patch.set_facecolor('#D5D5D5') 
+ax1.set_facecolor('#D5D5D5') 
+
+ax1.plot(Rin + R_midpoints, Temp2(MassBH, AccR, R_midpoints, Rin), color = 'blue', label = 'Viscous')
+ax1.plot(Rin + R_midpoints, Temp3(MassBH, AccR, R_midpoints), color = 'red', label = 'Non-Viscous')
+ax1.set_xlim(0, 4e6)
+ax1.set_ylabel('Temperature (K)', fontsize=20)
+ax1.set_xlabel('Distance from centre of Black hole (m)', fontsize=20)
+ax1.tick_params(axis='x', labelsize=16)
+ax1.tick_params(axis='y', labelsize=16)
+ax1.legend(fontsize=16)
 plt.show()
-'''
+
+
 
 '''
 #Blackbody flux equation using built in function from astropy
@@ -552,13 +557,13 @@ L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
 L3sum = np.sum(L3, axis = 0)
 
 #Object mass = mass of sun
-LumSunMass = (Flux(Temp2(MassS, AccR, R_midpoints, Rin))) * Area(R_midpoints)
-LumSunMassSum = np.sum(LumSunMass, axis = 0)
+LumSunMass = (Flux(Temp2(Mass2, AccR, R_midpoints, Rin))) * Area(R_midpoints)
+LumSunMass2um = np.sum(LumSunMass, axis = 0)
 
 #mass of sun with spin
 #mass of sun with spin
-LumSunMassSpin = (Flux(Temp2(MassS, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
-LumSunMassSumSpin = np.sum(LumSunMassSpin, axis = 0)
+LumSunMass2pin = (Flux(Temp2(Mass2, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
+LumSunMass2umSpin = np.sum(LumSunMass2pin, axis = 0)
 
 #Different accretion rate
 #Different accretion rate
@@ -569,6 +574,7 @@ LumdAccrSum = np.sum(LumdAccr, axis = 0)
 #D Accr with spin
 LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
+
 
 #Luminosity eddington limit
 def L_edd(M):
@@ -590,27 +596,37 @@ L_non_viscous = Flux((Temp3(MassBH, AccR, R_midpoints))) * Area(R_midpoints)
 Lsum_non_viscous = np.sum(L_non_viscous, axis=0)
 
 
+LumSMBH = (Flux(Temp2(10**9 * const.M_sun.to_value(), AccR, R_midpoints, Rin))) * Area(R_midpoints)  
+LumSMBHsum = np.sum(LumSMBH, axis = 0)
+
 
 TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq)*u.W  #.to(u.W)
 TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq)*u.W  #.to(u.W)
 TotL3 = scipy.integrate.trapezoid(L3sum, freq)*u.W  #.to(u.W)
-TotLumSunMass = scipy.integrate.trapezoid(LumSunMassSum, freq)*u.W  #.to(u.W)
-TotLumSunMassSpin = scipy.integrate.trapezoid(LumSunMassSumSpin, freq)*u.W  #.to(u.W)
+TotLumSunMass = scipy.integrate.trapezoid(LumSunMass2um, freq)*u.W  #.to(u.W)
+TotLumSunMass2pin = scipy.integrate.trapezoid(LumSunMass2umSpin, freq)*u.W  #.to(u.W)
 TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq)*u.W  #.to(u.W)
 TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W)
 TotLumMilestone2 = scipy.integrate.trapezoid(Lsum_non_viscous, freq)*u.W  #.to(u.W)
+TotLumSMBH = scipy.integrate.trapezoid(LumSMBHsum, freq)*u.W
 
 
-#print(f'(Milestone) L sum = {TotLumMilestone}')
-#print(f'(1) L sum = {TotLumMilestone2}')
-#print(TotLumMilestone2/TotLumMilestone)
+print(f'(SMBH) L sum = {TotLumSMBH}')
+print(f'(Milestone) L sum = {TotLumMilestone}')
+print(f'(Milestone) L sum = {TotLumSunMass}')
+print(f'(1) L sum = {TotLumMilestone2}')
+print(TotLumMilestone2/TotLumMilestone)
+print(TotLumSunMass/TotLumMilestone)
+print(TotL3/TotLumMilestone)
+print(TotLumSunMass2pin/TotLumSunMass)
+
 
 '''
 print(f'(Milestone) L sum = {TotLumMilestone}')
 print(f'(Equation+scaled r) L sum = {TotLscaled}')
 print(f'(Milestone + spin) L sum = {TotL3}')
 print(f'(Sun mass) L sum = {TotLumSunMass}')
-print(f'(Sun mass + spin) L sum = {TotLumSunMassSpin}')
+print(f'(Sun mass + spin) L sum = {TotLumSunMass2pin}')
 print(f'(D Accr) L sum = {TotLumdAccr}')
 print(f'(D Accr + spin) L sum = {TotLumdAccrSpin}')
 '''
@@ -637,8 +653,8 @@ plt.ylim(10e20, 10e31)
 
 MileStone, = plt.loglog(freq, freq * LumMilestonesum, linestyle='-', color = 'blue')
 MaxSpin, = plt.loglog(freq, freq * L3sum, linestyle='--', color = 'blue')
-#SunMass, = plt.loglog(freq, freq * LumSunMassSum, linestyle='-', color = 'green')
-#SunMassSpin, = plt.loglog(freq, freq * LumSunMassSumSpin, linestyle='--', color = 'green')
+#SunMass, = plt.loglog(freq, freq * LumSunMass2um, linestyle='-', color = 'green')
+#SunMass2pin, = plt.loglog(freq, freq * LumSunMass2umSpin, linestyle='--', color = 'green')
 dAccr, = plt.loglog(freq, freq * LumdAccrSum, linestyle='-', color = 'green')
 dAccrSpin, = plt.loglog(freq, freq * LumdAccrSumSpin, linestyle='--', color = 'green')
 
@@ -665,23 +681,28 @@ plt.show()
 
 
 
+#THIS IS THE PLOT
+'''
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
-ax1.set_xlim(11, 19)
-ax1.set_ylim(15, 32)
+fig.patch.set_facecolor('#D5D5D5') 
+ax1.set_facecolor('#D5D5D5') 
+
+ax1.set_xlim(11, 20)
+ax1.set_ylim(15, 38)
 
 MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='blue')
 MaxSpin, = ax1.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color='blue')
 NonVisous, = ax1.plot(np.log10(freq), np.log10(freq * Lsum_non_viscous), linestyle='--', color='red', label='Non-Viscous')
-dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumdAccrSum), linestyle='-', color='green')
-dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumdAccrSumSpin), linestyle=':', color='green')
+dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='green')
+dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2umSpin), linestyle=':', color='green')
 
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
 max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='Non-Viscous')
-mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'AccR=10$^{15}$Kg/s')
-mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'AccR=10$^{10}$Kg/s')
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$')
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$')
 ax1.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
 
 ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
@@ -707,7 +728,29 @@ ax2.set_xticklabels(custom_labels)
 ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
 ax2.tick_params(axis='x', labelsize=14)
 
+peak_indices = {
+    'MileStone': np.argmax(LumMilestonesum),
+    'MaxSpin': np.argmax(L3sum),
+    'NonVisous': np.argmax(Lsum_non_viscous),
+    'dAccr': np.argmax(LumSunMass2um),
+    'dAccrSpin': np.argmax(LumSunMass2umSpin)
+}
+
+peak_frequencies = {key: freq[idx] for key, idx in peak_indices.items()}
+peak_y_values = {key: np.log10(freq[peak_indices[key]] * value[peak_indices[key]]) for key, value in zip(peak_indices.keys(), [LumMilestonesum, L3sum, Lsum_non_viscous, LumSunMass2um, LumSunMass2umSpin])}
+
+print("Peak frequencies (Hz) and corresponding Luminosities (W):")
+for key in peak_frequencies:
+    print(f"{key}: Frequency = {peak_frequencies[key]:.2e} Hz, Y-value = {10**peak_y_values[key]:.2e}")
+
+
 plt.show()
+'''
+
+
+#DO HOW LONG IT TAKES TO GET A CONSTANT ANSWER FOR LUMINOSITY
+#LUMINOSITY ANSWER/LUMINOSITY FOR SAID NUMBER OF RINGS MAYBES?
+
 
 
 '''
@@ -743,27 +786,56 @@ with quantity_support():
     plt.show()
 '''
 
-''''
+
+
+#AND USE THIS ONE
+'''
 Te = Temp2(MassBH, AccR, R_midpoints, Rin)
 areas = Area(R_midpoints)
 
-plt.figure(figsize=(10, 6))
-plt.xlim(11, 19)
-plt.ylim(15, 32)
+
+
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+
+fig.patch.set_facecolor('#D5D5D5')  # Adjust this hex color for accuracy
+ax1.set_facecolor('#D5D5D5') 
+
+ax1.set_xlim(11, 19)
+ax1.set_ylim(15, 32)
 index2 = [100, 2000, 3500, 5000, 6500, 8000, 9500]
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+colors = ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red']
 for j, color in zip(index2, colors):
     L = Flux(Te[j]) * areas[j]
     Lsum = np.sum(L, axis=0)
     temp_label = f'{Te[j]:.2g}'
     temp_label = temp_label.replace('e+0', r'\times 10^{').replace('e-0', r'\times 10^{-') + '}'
-    plt.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'${temp_label}$ K')
-plt.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black')
-plt.legend(fontsize=12)
-plt.ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
-plt.xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
-plt.xticks(fontsize=14)
-plt.yticks(fontsize=14)
+    ax1.plot(np.log10(freq), np.log10(freq * Lsum), linestyle='--', color=color, label=f'${temp_label}$ K')
+ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black')
+ax1.legend(fontsize=12)
+ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
+ax1.tick_params(axis='x', labelsize=14)
+ax1.tick_params(axis='y', labelsize=14)
+
+ax2 = ax1.twiny()
+
+freq_ticks = ax1.get_xticks()
+
+# Convert frequency ticks to wavelength ticks
+wavelength_ticks = np.log10(const.c.value / (10**freq_ticks))
+
+# Create custom labels
+custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_ticks]
+
+# Set the secondary x-axis limits and labels
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(freq_ticks)
+ax2.set_xticklabels(custom_labels)
+ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
+ax2.tick_params(axis='x', labelsize=14)
+
+
 plt.show()
 '''
 
@@ -864,4 +936,71 @@ plt.yticks(fontsize=14)
 plt.legend(fontsize=14)
 plt.show()
 '''
+
+
+
+
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+
+fig.patch.set_facecolor('#D5D5D5') 
+ax1.set_facecolor('#D5D5D5') 
+
+ax1.set_xlim(11, 22)
+ax1.set_ylim(15, 40)
+
+MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='blue')
+MaxSpin, = ax1.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color='blue')
+SMBH, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBHsum), linestyle='--', color='red', label='SMBH')
+#dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='green')
+#dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2umSpin), linestyle=':', color='green')
+
+no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
+max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
+max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='SMBH')
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$')
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$')
+ax1.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
+
+ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
+ax1.tick_params(axis='x', labelsize=14)
+ax1.tick_params(axis='y', labelsize=14)
+
+# Create a secondary x-axis
+ax2 = ax1.twiny()
+
+freq_ticks = ax1.get_xticks()
+
+# Convert frequency ticks to wavelength ticks
+wavelength_ticks = np.log10(const.c.value / (10**freq_ticks))
+
+# Create custom labels
+custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_ticks]
+
+# Set the secondary x-axis limits and labels
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(freq_ticks)
+ax2.set_xticklabels(custom_labels)
+ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
+ax2.tick_params(axis='x', labelsize=14)
+
+peak_indices = {
+    'MileStone': np.argmax(LumMilestonesum),
+    'MaxSpin': np.argmax(L3sum),
+    'NonVisous': np.argmax(Lsum_non_viscous),
+    'dAccr': np.argmax(LumSunMass2um),
+    'dAccrSpin': np.argmax(LumSunMass2umSpin)
+}
+
+peak_frequencies = {key: freq[idx] for key, idx in peak_indices.items()}
+peak_y_values = {key: np.log10(freq[peak_indices[key]] * value[peak_indices[key]]) for key, value in zip(peak_indices.keys(), [LumMilestonesum, L3sum, Lsum_non_viscous, LumSunMass2um, LumSunMass2umSpin])}
+
+print("Peak frequencies (Hz) and corresponding Luminosities (W):")
+for key in peak_frequencies:
+    print(f"{key}: Frequency = {peak_frequencies[key]:.2e} Hz, Y-value = {10**peak_y_values[key]:.2e}")
+
+
+plt.show()
+
 
