@@ -187,13 +187,15 @@ LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
 
 
 #Luminosity eddington limit
-def L_edd(M):
-  return (4 * np.pi * const.G.value * M * const.m_p.value * const.c.value)/const.sigma_T.value
+def L_edd(Mass):
+  return (4 * np.pi * const.G.value * Mass * const.m_p.value * const.c.value)/const.sigma_T.value
 
 eta = 0.4  #efficierncy of accretion i guess
 
 #max accretion rate
 AccR_Edd = L_edd(MassBH)/(eta * const.c.value**2)
+
+#print(f'Eddington limit accretion = {AccR_Edd}')
 
 
 LumEdd = (Flux(Temp2(MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
@@ -234,10 +236,12 @@ TotLumSMBH3 = scipy.integrate.trapezoid(LumSMBH3sum, freq)*u.W
 TotLumEdd = scipy.integrate.trapezoid(LumEddsum, freq)*u.W
 
 
+
+
 print(f'(SMBH1) L sum = {TotLumSMBH1}')
 print(f'(SMBH2) L sum = {TotLumSMBH2}')
 print(f'(SMBH3) L sum = {TotLumSMBH3}')
-print(f'(SMBH3) L sum = {TotLumEdd}')
+print(f'(10MSun Edd) L sum = {TotLumEdd}')
 
 '''
 print(f'(Milestone) L sum = {TotLumMilestone}')
@@ -251,8 +255,8 @@ print(TotLumSunMass2pin/TotLumSunMass)
 
 
 
-
-
+#IMPORTAMNT PLOT
+'''
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
@@ -272,14 +276,15 @@ c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color
 #dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='green')
 #dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2umSpin), linestyle=':', color='green')
 
-'''
+
 no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
 max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
 max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='SMBH')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$')
 mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$')
 ax1.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
-'''
+
+
 
 ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
 ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
@@ -321,8 +326,48 @@ for key in peak_frequencies:
 
 
 plt.show()
+'''
 
 
+
+
+#Log(Lum/Lum_edd) vs log(AccR) as seen in 'slim accretion discs' by Abramowicz and buddies
+#doesnt look same, linear even past eddington limit, wrote by chat so could be wrong, could be using different equations to the paper (prob)
+
+
+accretion_rate_ratios = np.logspace(np.log10(0.001), np.log10(10), 10)  # From 0.001 to 10 times the Eddington accretion rate
+accretion_rates = accretion_rate_ratios * AccR_Edd
+
+#print(accretion_rates)
+
+luminosities = np.zeros(len(accretion_rate_ratios))
+luminosities_NV = np.zeros(len(accretion_rate_ratios))
+
+
+# Calculate the luminosity for each accretion rate
+for i, acc_rate in enumerate(accretion_rates):
+    Lum = Flux(Temp2(MassBH, acc_rate, R_midpoints, Rin)) * Area(R_midpoints)
+    luminosities[i] = scipy.integrate.trapezoid(np.sum(Lum, axis=0), freq)
+
+for i, acc_rate in enumerate(accretion_rates):
+    Lum2 = Flux(Temp3(MassBH, acc_rate, R_midpoints)) * Area(R_midpoints)
+    luminosities_NV[i] = scipy.integrate.trapezoid(np.sum(Lum2, axis=0), freq)
+  
+L_Le = luminosities*u.W / TotLumEdd
+L_Le_NV = luminosities_NV*u.W / TotLumEdd
+
+
+# Plotting the results
+plt.figure(figsize=(10, 6))
+plt.plot(np.log10(accretion_rate_ratios), np.log10(L_Le), linestyle='-', color='b', label='Viscous')
+plt.plot(np.log10(accretion_rate_ratios), np.log10(L_Le_NV), linestyle='-', color='r', label='Non-Viscous')
+#plt.xscale('log')
+#plt.yscale('log')
+plt.xlabel('Accretion Rate Ratio (log scale)')
+plt.ylabel('Luminosity (log scale)')
+plt.title('This should even off after 0, but doesnt, inaccurate equations perhaps?')
+plt.legend()
+plt.show()
 
 
 
@@ -679,4 +724,3 @@ for key in peak_frequencies:
 
 plt.show()
 '''
-
