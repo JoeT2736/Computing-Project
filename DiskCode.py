@@ -222,6 +222,7 @@ LumSMBH3 = (Flux(Temp2(MassSMBH3, AccR, R_midpoints, Rin))) * Area(R_midpoints)
 LumSMBH3sum = np.sum(LumSMBH3, axis = 0)
 
 
+
 TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq)*u.W  #.to(u.W)
 TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq)*u.W  #.to(u.W)
 TotL3 = scipy.integrate.trapezoid(L3sum, freq)*u.W  #.to(u.W)
@@ -234,7 +235,6 @@ TotLumSMBH1 = scipy.integrate.trapezoid(LumSMBH1sum, freq)*u.W
 TotLumSMBH2 = scipy.integrate.trapezoid(LumSMBH2sum, freq)*u.W
 TotLumSMBH3 = scipy.integrate.trapezoid(LumSMBH3sum, freq)*u.W
 TotLumEdd = scipy.integrate.trapezoid(LumEddsum, freq)*u.W
-
 
 
 
@@ -333,8 +333,9 @@ plt.show()
 
 #Log(Lum/Lum_edd) vs log(AccR) as seen in 'slim accretion discs' by Abramowicz and buddies
 #doesnt look same, linear even past eddington limit, wrote by chat so could be wrong, could be using different equations to the paper (prob)
+#should become flat past eddington limit
 
-
+'''
 accretion_rate_ratios = np.logspace(np.log10(0.001), np.log10(10), 10)  # From 0.001 to 10 times the Eddington accretion rate
 accretion_rates = accretion_rate_ratios * AccR_Edd
 
@@ -363,11 +364,66 @@ plt.plot(np.log10(accretion_rate_ratios), np.log10(L_Le), linestyle='-', color='
 plt.plot(np.log10(accretion_rate_ratios), np.log10(L_Le_NV), linestyle='-', color='r', label='Non-Viscous')
 #plt.xscale('log')
 #plt.yscale('log')
-plt.xlabel('Accretion Rate Ratio (log scale)')
-plt.ylabel('Luminosity (log scale)')
-plt.title('This should even off after 0, but doesnt, inaccurate equations perhaps?')
+plt.xlabel('Log(Accretion Rate / Eddington Accretion Rate)')
+plt.ylabel('Log(Luminosity / Eddington Luminosity)')
 plt.legend()
 plt.show()
+'''
+
+
+
+#Spectrums of black holes with different accretion rates
+
+accretion_rates = [0.1, 1, 10]  # Different accretion rates (in units of Eddington accretion rate)
+
+LLowEdd = (Flux(Temp2(MassBH, 0.1*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LLowEddSum = np.sum(LLowEdd, axis = 0)
+LAboveEdd = (Flux(Temp2(MassBH, 3*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LAEddSum = np.sum(LAboveEdd, axis = 0)
+LFarLessEdd = (Flux(Temp2(MassBH, 0.0001*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LFLEddSum = np.sum(LFarLessEdd, axis = 0)
+
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+
+ax1.set_xlim(11, 20)
+ax1.set_ylim(15, 38)
+
+MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), color='blue', label='m')
+lowEdd, = ax1.plot(np.log10(freq), np.log10(freq * LLowEddSum), color='black', label=''f'Accretion rate = {0.1} Edd')
+Edd, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), color='red', label=''f'Accretion rate = {1} Edd')
+AboveEdd, = ax1.plot(np.log10(freq), np.log10(freq * LAEddSum), color='purple', label=''f'Accretion rate = {3} Edd')
+FarLessThanEdd, = ax1.plot(np.log10(freq), np.log10(freq * LFLEddSum), color='green', label=''f'Accretion rate = {0.001} Edd')
+
+ax1.legend(fontsize=12)
+
+ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
+ax1.tick_params(axis='x', labelsize=14)
+ax1.tick_params(axis='y', labelsize=14)
+
+# Create a secondary x-axis
+ax2 = ax1.twiny()
+
+freq_ticks = ax1.get_xticks()
+
+# Convert frequency ticks to wavelength ticks
+wavelength_ticks = np.log10(const.c.value / (10**freq_ticks))
+
+# Create custom labels
+custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_ticks]
+
+# Set the secondary x-axis limits and labels
+ax2.set_xlim(ax1.get_xlim())
+ax2.set_xticks(freq_ticks)
+ax2.set_xticklabels(custom_labels)
+ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
+ax2.tick_params(axis='x', labelsize=14)
+
+plt.show()
+
+
+
 
 
 
@@ -402,7 +458,7 @@ print(spectra)
 
 
 
-#THIS IS THE PLOT
+#Plot used in poster, luminosity*freq vs frequency
 '''
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
@@ -473,7 +529,7 @@ plt.show()
 #LUMINOSITY ANSWER/LUMINOSITY FOR SAID NUMBER OF RINGS MAYBES?
 
 
-
+#same as last one, but doesnt fully work
 '''
 plt.figure(figsize=(10, 6))
 plt.xlim(11, 19)
@@ -499,7 +555,6 @@ plt.legend()
 plt.show()
 
 
-
 with quantity_support():
     plt.figure()
     plt.semilogx(f, f)
@@ -510,6 +565,7 @@ with quantity_support():
 
 
 #AND USE THIS ONE
+#shows how individual temp spectrums make up the larger spectrum for the whole accreion disc
 '''
 Te = Temp2(MassBH, AccR, R_midpoints, Rin)
 areas = Area(R_midpoints)
@@ -560,6 +616,9 @@ ax2.tick_params(axis='x', labelsize=14)
 plt.show()
 '''
 
+
+
+# Plot the luminosity spectrum for each accretion rate but doesnt work, Max_AccR not defined
 '''
 accretion_rates1 = [0.1 * Max_AccR, 0.5 * Max_AccR, Max_AccR, 2 * Max_AccR]
 accretion_rates2 = np.logspace(np.log10(0.01 * Max_AccR), np.log10(2000 * Max_AccR), 5)
@@ -593,6 +652,7 @@ plt.legend(fontsize=14)
 plt.show()
 '''
 
+#spectrums for a range of masses
 '''
 masses = np.logspace(np.log10(const.M_sun.to_value()), np.log10(100 * const.M_sun.to_value()), 5)
 
@@ -626,6 +686,8 @@ plt.legend(fontsize=14)
 plt.show()
 '''
 
+
+#kinda the same as last one
 '''
 masses = np.logspace(np.log10(10 * const.M_sun.to_value()), np.log10(1000900 * const.M_sun.to_value()), 5)
 
@@ -659,7 +721,7 @@ plt.show()
 '''
 
 
-#changing this for smbh's only
+#same plot as poster one, but includes super massive black hole
 '''
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
@@ -672,7 +734,7 @@ ax1.set_ylim(15, 40)
 
 MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='blue')
 MaxSpin, = ax1.plot(np.log10(freq), np.log10(freq * L3sum), linestyle=':', color='blue')
-SMBH, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBHsum), linestyle='--', color='red', label='SMBH')
+SMBH, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH1sum), linestyle='--', color='red', label='SMBH')
 #dAccr, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='green')
 #dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2umSpin), linestyle=':', color='green')
 
