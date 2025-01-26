@@ -382,6 +382,10 @@ LAboveEdd = (Flux(Temp2(MassBH, 3*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoin
 LAEddSum = np.sum(LAboveEdd, axis = 0)
 LFarLessEdd = (Flux(Temp2(MassBH, 0.0001*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
 LFLEddSum = np.sum(LFarLessEdd, axis = 0)
+LumEdd2 = (Flux(Temp2(30*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LumEddsum2 = np.sum(LumEdd2, axis = 0)
+LumEdd3 = (Flux(Temp2(60*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LumEddsum3 = np.sum(LumEdd3, axis = 0)
 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
@@ -389,13 +393,20 @@ fig.set_size_inches(10, 6)
 ax1.set_xlim(11, 20)
 ax1.set_ylim(15, 38)
 
-MileStone, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), color='blue', label='m')
-lowEdd, = ax1.plot(np.log10(freq), np.log10(freq * LLowEddSum), color='black', label=''f'Accretion rate = {0.1} Edd')
-Edd, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), color='red', label=''f'Accretion rate = {1} Edd')
-AboveEdd, = ax1.plot(np.log10(freq), np.log10(freq * LAEddSum), color='purple', label=''f'Accretion rate = {3} Edd')
-FarLessThanEdd, = ax1.plot(np.log10(freq), np.log10(freq * LFLEddSum), color='green', label=''f'Accretion rate = {0.001} Edd')
+lowEdd, = ax1.plot(np.log10(freq), np.log10(freq * LLowEddSum), color='blue', linestyle='-', label='Accretion rate = 0.1 Edd')
+Edd1, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), color='red', linestyle='-', label='Accretion rate = 1 Edd')
+Edd2, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum2), color='red', linestyle=':')
+Edd3, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum3), color='red', linestyle='--')
+AboveEdd, = ax1.plot(np.log10(freq), np.log10(freq * LAEddSum), color='purple', linestyle='-', label='Accretion rate = 3 Edd')
+FarLessThanEdd, = ax1.plot(np.log10(freq), np.log10(freq * LFLEddSum), color='green', linestyle='-', label='Accretion rate = 0.001 Edd')
 
-ax1.legend(fontsize=12)
+mass1_line = plt.Line2D([0], [0], color='black', linestyle='-', label='Mass = MassBH')
+mass30_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Mass = 30*MassBH')
+mass60_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Mass = 60*MassBH')
+
+ax1.legend(handles=[FarLessThanEdd, lowEdd, Edd1, Edd2, Edd3, AboveEdd, 
+mass1_line, mass30_line, mass60_line], fontsize=12)
+
 
 ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
 ax1.set_xlabel(r'$\log_{10}(v)$ Hz', fontsize=16)
