@@ -1,3 +1,20 @@
+#how far away can you see balck hole as funcction of accretion rate?????
+#set black hole at a distance then look at received flux ^^^
+#flux vs distance for seeable BHs
+#extra non thermal process in black hole not in this modeled >>>> Much higher energies than possible for thermal
+#what AGNs can be seen????
+#filters???? V-band??? B-band???
+#size of black holes observables in a galaxy?
+#Ledd vs mass (add in observed black holes -> do they fit this prediction???)
+#Ledd -> M_dot_critical
+#is Ledd actual limit??
+#variation in accretion rates??
+#this code is for static shift -> is it good for moving disc??? accretion rate as function of time???
+#radiation pressure >>>> hot flow
+#winds
+#optically thick to thin disc (becomes thin close to BH)
+#Rakshit etal    SDSS
+
 
 import matplotlib.pyplot as plt
 import numpy as np
