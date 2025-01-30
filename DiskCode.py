@@ -255,6 +255,22 @@ TotLumEdd = scipy.integrate.trapezoid(LumEddsum, freq)*u.W
 
 
 
+
+
+#flux received
+def f(Lum, dist):
+  return Lum/(4*np.pi * dist**2)
+
+#flux to magnitude?
+
+
+
+
+
+
+
+
+
 print(f'(SMBH1) L sum = {TotLumSMBH1}')
 print(f'(SMBH2) L sum = {TotLumSMBH2}')
 print(f'(SMBH3) L sum = {TotLumSMBH3}')
@@ -403,6 +419,10 @@ LumEdd2 = (Flux(Temp2(30*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoint
 LumEddsum2 = np.sum(LumEdd2, axis = 0)
 LumEdd3 = (Flux(Temp2(60*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
 LumEddsum3 = np.sum(LumEdd3, axis = 0)
+
+
+
+
 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
@@ -814,3 +834,4 @@ for key in peak_frequencies:
 
 plt.show()
 '''
+
