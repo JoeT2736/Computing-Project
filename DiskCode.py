@@ -893,11 +893,67 @@ for key in peak_frequencies:
 plt.show()
 '''
 
+#Magnitude to flux equation (flux in watts per square kilometer)
+def flux(mag):
+    return 10**((-mag)/2.5) * flux_ref_B
+    #.to(u.J / (u.km**2 * u.s * u.Hz)) #change this depending on filter used
 
 
 
+#Luminosity of AGN from the apparent magnitude
+def Lum(mag, dist):
+    return flux(mag) * (4*np.pi * dist**2)
 
 
+#flux_ref = #changes depending on filter used
+#values given in erg/(s*cm^2*Hz)
+flux_ref_U = 1.81e-20
+flux_ref_B = 4.26e-20 
+#* u.erg / (u.s * u.cm**2 * u.Hz)
+flux_ref_V = 3.64e-20
+flux_ref_R = 3.08e-20
+flux_ref_I = 1.554e-20
+
+
+D = np.array([
+    113, 672, 740, 209, 115, 145, 142, 96.7, 461, 287,
+    155, 1170, 368, 758, 283, 740, 133, 410, 395, 138,
+    606, 522, 1510, 251, 151, 283
+])
+
+mag = np.array([
+    16.16, 16.21, 17.81, 15.13, 15.59, 16.64, 14.50, 15.84, 16.70, 16.75,
+    18.08, 17.64, 17.16, 15.49, 17.17, 16.66, 16.13, 16.70, 15.36, 17.62,
+    16.14, 16.36, 17.54, 16.74, 13.96, 18.73
+])
+
+
+#List of Black hole mass and luminoisty
+L_bol1 = np.log10(10**np.array([
+    45.34, 44.88, 44.91, 45.23, 44.78, 44.57, 44.71, 44.69, 45.03, 44.63,
+    44.99, 43.86, 44.29, 44.41, 43.56, 43.73, 44.09, 44.83, 45.28, 45.39,
+    45.93, 45.93, 45.36, 46.16, 45.81, 45.01, 45.83, 45.50, 45.58, 45.19,
+    45.66]) * 10**(-7))
+
+log_L2 = np.log10(10**np.array([
+    9.53, 11.09, 10.50, 10.49, 9.78, 9.57, 10.40, 9.52, 
+    10.56, 10.13, 9.05, 10.94, 10.18, 11.45, 9.94, 10.99, 9.69,
+    10.46, 10.99, 9.13, 11.02, 10.83, 11.22, 10.01, 10.71, 9.32]) * const.L_sun.to_value())
+
+#L_bol = np.concatenate((L_bol, log_L), axis = None)
+
+M_BH1 = np.array([
+    7.42, 8.55, 8.27, 7.91, 6.77, 7.86, 6.82, 6.69, 7.86, 7.20,
+    7.60, 7.64, 7.36, 6.94, 6.13, 7.13, 6.91, 8.03, 6.84, 7.58,
+    8.41, 8.24, 7.38, 8.24, 7.49, 8.56, 7.90, 8.48, 7.57, 7.92,
+    8.62]) 
+    
+M_BH2 = np.array([7.15, 8.59, 8.57, 8.41, 7.68, 7.74, 8.18, 7.72, 
+    8.84, 7.97, 7.40, 8.44, 8.16, 8.95, 7.86, 8.64,
+    7.54, 8.65, 9.11, 7.69, 8.45, 8.77, 8.89, 8.46, 8.16, 7.58])
+
+
+#Luminosity vs mass of black hole
 Masses = np.linspace(10**6, 10**10, 100) * const.M_sun.to_value()
 
 luminosities = []
@@ -911,29 +967,56 @@ for i in Masses:
     L = L_edd(i)
     LEdd.append(L)
 
-print(luminosities)
+#print(luminosities)
 
-
-#LogMass vs LogLuminosity
 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
+#ax1.set_ylim(28, 45)
+#ax1.plot(np.log10((Masses)/const.M_sun.to_value()), np.log10(luminosities), linestyle='-', color='black', label='')
+ax1.plot(np.log10((Masses)/const.M_sun.to_value()), np.log10(LEdd), linestyle='-', color='black', label='Eddington limit')
+ax1.errorbar(M_BH1, L_bol1, fmt='o', color='red', label='Observed Data')
+ax1.errorbar(M_BH2, log_L2, fmt='o', color='green', label='Observed Data')
+'''
+# Line of best fit
+coefficients = np.polyfit(M_BH, L_bol, 1)
+polynomial = np.poly1d(coefficients)
+x_fit = np.linspace(min(M_BH), max(M_BH), 100)
+y_fit = polynomial(x_fit)
+ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
+'''
+#ax1.set_xscale('log')
+#ax1.set_yscale('log')
+ax1.legend(fontsize=12)
+ax1.set_ylabel('Luminosity', fontsize=16)
+ax1.set_xlabel('Mass', fontsize=16)
 
-ax1.plot((Masses)/const.M_sun.to_value(), luminosities, linestyle='-', color='black', label='')
-ax1.plot((Masses)/const.M_sun.to_value(), LEdd, linestyle='-', color='black', label='Eddington limit')
-
-ax1.set_xscale('log')
-ax1.set_yscale('log')
-
-#ax1.set_ylabel(r'$\log_{10}(Luminosity)$ W', fontsize=16)
 
 
+#mass vs accretion rate
+
+#Ac = ((10**L_bol) * const.L_sun.to_value())/(0.1 * const.c.value**2)
+'''
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+ax1.plot(np.log10((Masses)/const.M_sun.to_value()), AccR_Edd(Masses), linestyle='-', color='black', label='Eddington limit')
+ax1.errorbar(M_BH, Ac, fmt='o', color='red', label='Observed Data')
+#Line of best fit
+coefficients = np.polyfit(M_BH, Ac, 1)
+polynomial = np.poly1d(coefficients)
+x_fit = np.linspace(min(M_BH), max(M_BH), 100)
+y_fit = polynomial(x_fit)
+ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
+ax1.legend(fontsize=12)
+ax1.set_ylabel('Accretion rate', fontsize=16)
+ax1.set_xlabel('Mass', fontsize=16)
+'''
 
 
+'''
+#Luminosity vs accretion rate of black hole
 luminosities2 = []
 Accretion = np.linspace(0.001, 10, 100) * AccR_Edd(MassSMBH2)
-
-
 for i in Accretion:
     LumAGN = (Flux(Temp2(MassSMBH2, i, R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))
     LumAGNsum = np.sum(LumAGN, axis=0)
@@ -943,18 +1026,15 @@ for i in Accretion:
 
 print(luminosities2)
 
-
-
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
 ax1.plot((Accretion)/AccR_Edd(MassSMBH2), (luminosities2)/L, linestyle='-', color='black', label='')
-
-
 ax1.set_xscale('log')
 ax1.set_yscale('log')
-
-
+ax1.set_ylabel('Luminosity', fontsize=16)
+ax1.set_xlabel('Accretion rate', fontsize=16)
+'''
 
 plt.show()
 
@@ -967,10 +1047,8 @@ plt.show()
 
 #mag_absolute = mag- 5 * np.log10(dist - 1)
 
-
 #Distance Array
 dist1 = np.linspace(1, 1000, 1000) * 10e6
-
 
 #flux_ref = #changes depending on filter used
 #values given in erg/(s*cm^2*Hz)
@@ -981,102 +1059,22 @@ flux_ref_V = 3.64e-20
 flux_ref_R = 3.08e-20
 flux_ref_I = 1.554e-20
 
-
-
-
-#Magnitude to flux equation (flux in watts per square kilometer)
-def flux(mag):
-    return 10**((-mag)/2.5) * flux_ref_B
-    #.to(u.J / (u.km**2 * u.s * u.Hz)) #change this depending on filter used
-
-
-
-#Luminosity of AGN from the apparent magnitude
-def Lum(mag, dist):
-    return flux(mag) * (4*np.pi * dist**2)
-
-
 #Max magnitude of possible observation
 mag_faintest_Hubble = 31.5
 mag_faintest_8to10m = 27
-
-
 #faintest luminosity possible
 def Lum_f_Hubble(dist):
     return Lum(mag_faintest_Hubble, dist)
-
 def Lum_f_8to10m(dist):
     return Lum(mag_faintest_8to10m, dist)
-
-
-
-#Using luminosity to find Accretion rate 
-
-
 
 #Hubble law
 def Velocity(dist):
     return cosmo.H(0) * dist
 
-
 #redshift equation (v << c)
 def redshift(dist):
   return Velocity(dist)/const.c.to('km/s')
-
-
-
-
-
-
-def Lum_f_Hubble(dist):
-    return Lum(mag_faintest_Hubble, dist)
-
-def Lum_f_8to10m(dist):
-    return Lum(mag_faintest_8to10m, dist)
-
-
-
-
-
-
-
-'''
-#Accretion rate from temperature 
-def Accretion_Rate(Mass, Radius, Rin, Temp):#i dont think this is going to work (would need to know size of black hole/AGN)
-  a = 8*np.pi * Temp * const.sigma_sb.to_value() * Radius**3
-  b = 1 - np.sqrt(Rin/Radius)
-  c = 3 * const.G.to_value() * Mass
-  return a / (b * c)
-
-
-# accretion rate proportional to (np.ln(luminosity))**4
-
-
-
-#plot of flux vs redshift
-fig, ax1 = plt.subplots()
-fig.set_size_inches(10, 6)
-
-#ax1.set_xlim(11, 20)
-#ax1.set_ylim(15, 38)
-
-
-for i in dist:
-  R = redshift(i)
-  L1, = ax1.plot(R, flux(mag_faintest_Hubble), linestyle='-', color='blue', label='Hubble')
-  L2, = ax1.plot(R, flux(mag_faintest_8to10m), linestyle='-', color='red', label='8-10m')
-  
-ax1.legend(fontsize=12)
-
-plt.show()
-'''
-
-
-
-
-
-
-
 
 #Smallest black hole that can be observed
 #Masses vs Magnitude
@@ -1096,41 +1094,12 @@ for i in MassAGN:
 def f(Lum, dist):
   return Lum/(4*np.pi * dist**2)
 
-
 #luminosity of zero magnitude star
 L0 = 3*10e28
-
 
 #flux to magnitude with no filter with respect to a zero point source
 def mag(Lum, dist):
   return -2.5 * np.log10(f(Lum, dist)/(L0))
-
-#in parsecs
-distance = 1000*10e7
-
-magnitudes = [mag(lum, distance) for lum in luminosities]
-
-
-
-fig, ax1 = plt.subplots()
-fig.set_size_inches(10, 6)
-
-#ax1.set_xlim(11, 20)
-#ax1.set_ylim(15, 38)
-
-ax1.plot(magnitudes, MassAGN/const.M_sun.to_value(), linestyle='-', color='black', label='')
-ax1.axvline(x=mag_faintest_Hubble, color='red', linestyle='--', label=f'Faintest mag = {mag_faintest_Hubble}'
-, ymin = 0, ymax = 2.2e40/const.M_sun.to_value())
-ax1.axvline(x=mag_faintest_8to10m, color='red', linestyle='--', label=f'Faintest mag = {mag_faintest_8to10m}'
-, ymin = 0, ymax = 2.2e40/const.M_sun.to_value())
-
-
-closest_index = np.argmin(np.abs(np.array(magnitudes) - mag_faintest_Hubble))
-intersection_mass = MassAGN[closest_index]
-#print(intersection_mass/const.M_sun.to_value())
-
-ax1.legend()
-#plt.show()
 
 
 def efficiency():
@@ -1138,25 +1107,6 @@ def efficiency():
 
 def ACCR(dist):
   return Lum_f_Hubble(dist) / (efficiency() * const.c.to_value()**2)
-
-Lum(mag, dist1)
-ACCR(dist1)
-
-
-
-fig, ax1 = plt.subplots()
-fig.set_size_inches(10, 6)
-
-#ax1.set_xlim(11, 20)
-#ax1.set_ylim(15, 38)
-
-ax1.plot(redshift(dist1), ACCR(dist1), linestyle='-', color='black', label='')
-
-
-
-ax1.legend()
-plt.show()
-
 
 
 
@@ -1171,5 +1121,6 @@ plt.show()
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
+
 
 
