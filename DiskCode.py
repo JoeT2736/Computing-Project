@@ -31,8 +31,6 @@ from astropy.cosmology import WMAP9 as cosmo
 
 
 
-#HOW DOES ACCRETION RATE OF AGN CHANGE WITH REDSHIFT??????????????????????????????????????????????????????????????????????
-
 
 
 
@@ -929,16 +927,16 @@ mag = np.array([
 
 
 #List of Black hole mass and luminoisty
-L_bol1 = np.log10(10**np.array([
+L_bol1 = np.log10((10**np.array([
     45.34, 44.88, 44.91, 45.23, 44.78, 44.57, 44.71, 44.69, 45.03, 44.63,
     44.99, 43.86, 44.29, 44.41, 43.56, 43.73, 44.09, 44.83, 45.28, 45.39,
     45.93, 45.93, 45.36, 46.16, 45.81, 45.01, 45.83, 45.50, 45.58, 45.19,
-    45.66]) * 10**(-7))
+    45.66]) * 10**(-7))/const.L_sun.to_value())
 
 log_L2 = np.log10(10**np.array([
     9.53, 11.09, 10.50, 10.49, 9.78, 9.57, 10.40, 9.52, 
     10.56, 10.13, 9.05, 10.94, 10.18, 11.45, 9.94, 10.99, 9.69,
-    10.46, 10.99, 9.13, 11.02, 10.83, 11.22, 10.01, 10.71, 9.32]) * const.L_sun.to_value())
+    10.46, 10.99, 9.13, 11.02, 10.83, 11.22, 10.01, 10.71, 9.32]))
 
 #L_bol = np.concatenate((L_bol, log_L), axis = None)
 
@@ -955,10 +953,8 @@ M_BH2 = np.array([7.15, 8.59, 8.57, 8.41, 7.68, 7.74, 8.18, 7.72,
 
 #Luminosity vs mass of black hole
 Masses = np.linspace(10**6, 10**10, 100) * const.M_sun.to_value()
-
 luminosities = []
 LEdd = []
-
 for i in Masses:
     LumAGN = (Flux(Temp2(i, AccR, R_midpoints(i), Rin(i)))) * Area(R_midpoints(i))
     LumAGNsum = np.sum(LumAGN, axis=0)
@@ -967,19 +963,16 @@ for i in Masses:
     L = L_edd(i)
     LEdd.append(L)
 
-#print(luminosities)
-
-
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 #ax1.set_ylim(28, 45)
-#ax1.plot(np.log10((Masses)/const.M_sun.to_value()), np.log10(luminosities), linestyle='-', color='black', label='')
-ax1.plot(np.log10((Masses)/const.M_sun.to_value()), np.log10(LEdd), linestyle='-', color='black', label='Eddington limit')
-ax1.errorbar(M_BH1, L_bol1, fmt='o', color='red', label='Observed Data')
-ax1.errorbar(M_BH2, log_L2, fmt='o', color='green', label='Observed Data')
+#ax1.plot(np.log10(luminosities), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='')
+ax1.plot(np.log10(LEdd/const.L_sun.to_value()), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='Eddington limit')
+ax1.errorbar(L_bol1, M_BH1, fmt='o', color='red', label='Observed Data')
+ax1.errorbar(log_L2, M_BH2, fmt='o', color='green', label='Observed Data')
 '''
 # Line of best fit
-coefficients = np.polyfit(M_BH, L_bol, 1)
+coefficients = np.polyfit(L_bol, M_BH, 1)
 polynomial = np.poly1d(coefficients)
 x_fit = np.linspace(min(M_BH), max(M_BH), 100)
 y_fit = polynomial(x_fit)
@@ -988,35 +981,44 @@ ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
 #ax1.set_xscale('log')
 #ax1.set_yscale('log')
 ax1.legend(fontsize=12)
-ax1.set_ylabel('Luminosity', fontsize=16)
-ax1.set_xlabel('Mass', fontsize=16)
+ax1.set_ylabel('log(Mass)', fontsize=16)
+ax1.set_xlabel('log(Luminosity)', fontsize=16)
+
+
 
 
 
 #mass vs accretion rate
 
-#Ac = ((10**L_bol) * const.L_sun.to_value())/(0.1 * const.c.value**2)
-'''
+Ac1 = ((10**L_bol1) * const.L_sun.to_value())/(0.1 * const.c.value**2)
+Ac2 = ((10**log_L2) * const.L_sun.to_value())/(0.1 * const.c.value**2)
+
+
+Accretion_rate = luminosities/(eta * const.c.to_value()**2)
+
+
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
-ax1.plot(np.log10((Masses)/const.M_sun.to_value()), AccR_Edd(Masses), linestyle='-', color='black', label='Eddington limit')
-ax1.errorbar(M_BH, Ac, fmt='o', color='red', label='Observed Data')
+ax1.plot(np.log10(AccR_Edd(Masses)), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='Eddington limit')
+#ax1.plot(np.log10((Masses)/const.M_sun.to_value()), np.log10(Accretion_rate), linestyle='-', color='black', label='Eddington limit')
+ax1.errorbar(np.log10(Ac1), M_BH1, fmt='o', color='red', label='Observed Data')
+ax1.errorbar(np.log10(Ac2), M_BH2, fmt='o', color='green', label='Observed Data')
 #Line of best fit
-coefficients = np.polyfit(M_BH, Ac, 1)
-polynomial = np.poly1d(coefficients)
-x_fit = np.linspace(min(M_BH), max(M_BH), 100)
-y_fit = polynomial(x_fit)
-ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
+#coefficients = np.polyfit(M_BH1, Ac, 1)
+#polynomial = np.poly1d(coefficients)
+#x_fit = np.linspace(min(M_BH1), max(M_BH1), 100)
+#y_fit = polynomial(x_fit)
+#ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
 ax1.legend(fontsize=12)
-ax1.set_ylabel('Accretion rate', fontsize=16)
-ax1.set_xlabel('Mass', fontsize=16)
-'''
+ax1.set_ylabel('Log(Mass)', fontsize=16)
+ax1.set_xlabel('Log(Accretion Rate)', fontsize=16)
+
 
 
 '''
 #Luminosity vs accretion rate of black hole
 luminosities2 = []
-Accretion = np.linspace(0.001, 10, 100) * AccR_Edd(MassSMBH2)
+Accretion = np.linspace(0.00001, 2, 100) * AccR_Edd(MassSMBH2)
 for i in Accretion:
     LumAGN = (Flux(Temp2(MassSMBH2, i, R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))
     LumAGNsum = np.sum(LumAGN, axis=0)
@@ -1029,11 +1031,11 @@ print(luminosities2)
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
-ax1.plot((Accretion)/AccR_Edd(MassSMBH2), (luminosities2)/L, linestyle='-', color='black', label='')
-ax1.set_xscale('log')
-ax1.set_yscale('log')
-ax1.set_ylabel('Luminosity', fontsize=16)
-ax1.set_xlabel('Accretion rate', fontsize=16)
+ax1.plot(np.log10((luminosities2)/const.L_sun.to_value()), np.log10(LEdd), linestyle='-', color='black', label='')
+ax1.errorbar(L_bol1, np.log10(Ac1), fmt='o', color='red', label='Observed Data')
+ax1.errorbar(log_L2, np.log10(Ac2), fmt='o', color='green', label='Observed Data')
+ax1.set_ylabel('Log(Accretion Rate)', fontsize=16)
+ax1.set_xlabel('Log(Luminosity)', fontsize=16)
 '''
 
 plt.show()
@@ -1044,7 +1046,7 @@ plt.show()
 
 
 
-
+'''
 #mag_absolute = mag- 5 * np.log10(dist - 1)
 
 #Distance Array
@@ -1108,7 +1110,7 @@ def efficiency():
 def ACCR(dist):
   return Lum_f_Hubble(dist) / (efficiency() * const.c.to_value()**2)
 
-
+'''
 
 
 
@@ -1121,6 +1123,3 @@ def ACCR(dist):
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
-
-
-
