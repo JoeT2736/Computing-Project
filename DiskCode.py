@@ -28,8 +28,59 @@ from scipy import integrate
 from astropy.cosmology import WMAP9 as cosmo
 
 
+'''
+# Extracted data
+data = """
+NGC 7319 0.023 130. N 7.38 44.19 I SY2
+NGC 7603 0.030 194. N 8.08 44.66 I SY2
+NGC 7672 0.013 98. N 6.88 43.86 I SY2
+NGC 7682 0.017 123. N 7.28 43.93 I SY2
+NGC 7743 0.006 83. N 6.59 43.60 I SY2
+Mrk 1 0.016 115. N 7.16 44.20 I SY2
+Mrk 3 0.014 269. N 8.65 44.54 I SY2
+Mrk 78 0.037 172. N 7.87 44.59 I SY2
+Mrk 270 0.010 148. N 7.60 43.37 I SY2
+Mrk 348 0.015 118. N 7.21 44.27 I SY2
+Mrk 533 0.029 144. N 7.56 45.15 I SY2
+Mrk 573 0.017 123. N 7.28 44.44 I SY2
+Mrk 622 0.023 100. N 6.92 44.52 I SY2
+Mrk 686 0.014 144. N 7.56 44.11 I SY2
+Mrk 917 0.024 149. N 7.62 44.75 I SY2
+Mrk 1018 0.042 195. N 8.09 44.39 I SY2
+Mrk 1040 0.017 151. N 7.64 44.53 I SY2
+Mrk 1066 0.012 105. N 7.01 44.55 I SY2
+Mrk 1157 0.015 95. N 6.83 44.27 I SY2
+Akn 79 0.018 143. N 7.54 45.24 F SY2
+Akn 347 0.023 186. N 8.00 44.84 F SY2
+IC 5063 0.011 160. N 7.74 44.53 I SY2
+II ZW55 0.025 212. N 8.23 44.54 F SY2
+F 341 0.016 114. N 7.15 44.13 I SY2
+UGC 3995 0.016 155. N 7.69 44.39 I SY2
+UGC 6100 0.029 156. N 7.70 44.48 I SY2
 
 
+"""
+
+# Split the data into lines
+lines = data.strip().split('\n')
+
+# Initialize lists
+L4 = []
+M4 = []
+T4 = []
+
+# Extract values into lists
+for line in lines:
+    values = line.split()
+    L4.append(float(values[6]))
+    M4.append(float(values[5]))
+    T4.append(values[8])
+
+# Print the lists to verify
+print("L4:", L4)
+print("M4:", M4)
+print("T4:", T4)
+'''
 
 
 
@@ -951,6 +1002,103 @@ M_BH2 = np.array([7.15, 8.59, 8.57, 8.41, 7.68, 7.74, 8.18, 7.72,
     7.54, 8.65, 9.11, 7.69, 8.45, 8.77, 8.89, 8.46, 8.16, 7.58])
 
 
+
+
+#Spatially Resolved Kinematics
+L1 = np.log10((10**np.array([44.98, 43.45]) / 3.826E+33))
+M1 = np.array([7.23, 7.62]) 
+T1 = np.array(["SY2", "SY2"])
+
+#Reverberaiton Mapping
+L2 = np.log10((10**np.array([45.34, 44.88, 44.91, 45.23, 44.78, 44.57, 44.71, 44.69, 45.03, 44.63, 
+        44.99, 43.86, 44.29, 44.41, 43.56, 43.73, 44.09, 44.83, 45.28, 45.39, 
+        45.93, 45.36, 46.16, 45.81, 45.01, 45.83, 45.50, 45.58, 45.19, 45.66,
+        45.52, 46.56, 45.47, 47.35, 46.33]) / 3.826E+33))
+
+M2 = np.array([7.42, 8.55, 8.27, 7.91, 6.77, 7.86, 6.82, 6.69, 7.86, 7.20, 
+       7.60, 7.64, 7.36, 6.94, 6.13, 7.13, 6.91, 8.03, 6.84, 7.58, 
+       8.41, 7.38, 8.24, 7.49, 8.56, 7.90, 8.48, 7.57, 7.92, 8.62,
+       7.88, 8.31, 7.74, 7.22, 8.23])
+
+T2 = np.array(["SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1",
+        "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "RQQ",
+        "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", 
+        "RQQ", "RQQ", "RQQ", "RLQ", "RLQ"])
+
+
+#Optical Luminoisty
+L3 = np.log10((10**np.array([45.84, 44.40, 43.92, 45.47, 45.62, 45.05, 45.45, 45.51, 46.22, 45.51, 
+         46.03, 46.02, 45.39, 45.63, 45.13, 45.93, 45.13, 44.98, 45.31, 46.54, 
+         45.78, 41.02, 45.57, 45.83, 46.69, 46.44, 46.64, 45.22, 44.74, 46.84, 
+         44.92, 44.94, 47.72, 46.01, 46.32, 46.47, 47.40, 47.00, 46.15, 46.12,
+         45.32, 45.12, 46.36, 45.36, 46.34, 46.43, 45.69, 46.30, 47.16, 45.58,
+         46.41, 45.97, 46.94, 46.54, 46.23, 45.99, 45.26, 44.63, 46.26, 46.35,
+         46.59, 46.54, 46.21, 46.71, 46.63, 44.87, 46.2, 44.55, 45.8, 46.49, 
+         46.33, 44.97, 44.25, 46.26, 44.08, 45.98, 45.56, 46.41, 45.81, 45.83, 
+         46.63, 46.48, 45.61, 46.1, 45.52, 45.86, 45.81, 47.11, 46.48, 46.19, 
+         43.94, 46.16, 46.93, 44.54, 46.38, 45.86, 46.0, 44.94, 46.99, 45.47, 
+         46.68, 46.89, 45.78, 47.21, 44.01, 45.63, 46.07, 45.85, 46.78, 46.23, 
+         46.21, 46.68, 45.54, 46.31, 45.32, 46.23, 46.84, 45.83, 45.75, 46.76, 
+         46.17, 46.23, 46.65, 45.67, 46.62, 47.17, 46.11, 45.47, 47.27, 46.96,
+         46.55, 46.22, 45.56, 47.07, 45.92, 45.94, 45.01]) / 3.826E+33))
+
+M3 = np.array([8.10, 6.54, 7.28, 8.90, 7.70, 6.67, 7.86, 8.03, 8.94, 7.79, 
+        9.08, 8.21, 8.29, 8.00, 7.29, 8.06, 8.10, 7.91, 6.37, 8.71, 
+        8.34, 6.73, 8.38, 9.52, 8.73, 8.74, 9.13, 8.57, 7.56, 8.97, 
+        6.54, 7.29, 8.52, 8.60, 8.98, 9.07, 9.47, 9.03, 8.79, 8.53, 
+        8.13, 7.42, 8.88, 7.55, 8.53, 9.58, 9.02, 8.68, 9.41, 8.74, 
+        8.67, 8.00, 9.40, 7.96, 8.52, 7.90, 7.72, 8.14, 9.28, 8.46,
+        9.00, 8.07, 9.10, 8.79, 8.89, 8.36, 8.75, 7.8, 6.83, 9.31, 
+        8.61, 7.5, 6.9, 9.82, 6.72, 8.73, 9.02, 8.41, 9.0, 8.41, 9.28, 
+        9.04, 8.42, 8.43, 8.83, 8.3, 8.15, 9.44, 9.73, 8.07, 6.46, 
+        8.82, 8.98, 7.99, 8.65, 8.93, 8.72, 7.25, 9.57, 7.28, 9.18, 
+        9.42, 7.76, 9.62, 6.63, 8.04, 8.07, 8.22, 9.85, 9.14, 8.89, 
+        8.91, 6.48, 8.63, 7.48, 9.62, 9.13, 8.73, 8.19, 9.61, 8.94, 
+        8.74, 7.68, 7.59, 8.87, 9.24, 7.14, 7.59, 9.17, 9.16, 9.3, 
+        8.93, 7.31, 9.31, 8.72, 8.78, 8.39])
+
+T3 = np.array(["SY1", "SY1", "SY1", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", 
+         "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RLQ", "RLQ", "RLQ", 
+         "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", 
+         "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ",
+         "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", 
+         "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", 
+         "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", "RLQ", 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
+         'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ'])
+
+
+#Stellar velocity dispersions
+L4 = np.log10((10**np.array([44.45, 43.67, 43.54, 43.54, 44.61, 44.27, 42.52, 44.33, 
+               43.84, 45.04, 44.02, 44.37, 43.38, 44.69, 44.1, 44.05, 43.92, 43.08, 
+               44.27, 43.47, 43.64, 43.38, 43.79, 45.39, 43.03, 43.81, 44.12, 
+               43.04, 44.05, 43.6, 44.3, 44.19, 44.66, 43.86, 43.93, 43.6, 44.2, 
+               44.54, 44.59, 43.37, 44.27, 45.15, 44.44, 44.52, 44.11, 44.75, 44.39, 
+               44.53, 44.55, 44.27, 45.24, 44.84, 44.53, 44.54, 44.13, 44.39, 44.48
+               ]) / 3.826E+33))
+
+M4 = np.array([6.92, 8.21, 6.09, 8.95, 7.47, 7.02, 7.65, 7.51, 8.19, 8.51, 7.18, 
+               7.88, 7.24, 7.88, 8.3, 7.3, 7.72, 6.06, 6.77, 7.53, 6.83, 7.4, 
+               6.95, 8.04, 6.51, 6.79, 6.39, 7.25, 6.94, 7.6, 7.99, 7.38, 8.08, 
+               6.88, 7.28, 6.59, 7.16, 8.65, 7.87, 7.6, 7.21, 7.56, 7.28, 6.92, 
+               7.56, 7.62, 8.09, 7.64, 7.01, 6.83, 7.54, 8.0, 7.74, 8.23, 7.15, 
+               7.69, 7.7])
+
+T4 = np.array(['SY1', 'SY1', 'SY1', 'SY1', 'SY1', 'SY1', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
+               'SY2', 'SY2', 'SY2']) 
+
+
+
 #Luminosity vs mass of black hole
 Masses = np.linspace(10**6, 10**10, 100) * const.M_sun.to_value()
 luminosities = []
@@ -968,8 +1116,33 @@ fig.set_size_inches(10, 6)
 #ax1.set_ylim(28, 45)
 #ax1.plot(np.log10(luminosities), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='')
 ax1.plot(np.log10(LEdd/const.L_sun.to_value()), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='Eddington limit')
-ax1.errorbar(L_bol1, M_BH1, fmt='o', color='red', label='Observed Data')
-ax1.errorbar(log_L2, M_BH2, fmt='o', color='green', label='Observed Data')
+#ax1.errorbar(L_bol1, M_BH1, fmt='o', color='red', label='Observed Data')
+#ax1.errorbar(log_L2, M_BH2, fmt='o', color='green', label='Observed Data')
+
+colours = {
+    "SY1": "blue",
+    "SY2": "orange",
+    "RQQ": "purple",
+    "RLQ": "green"
+}
+
+# Plot Spatially Resolved Kinematics
+for t, l, m in zip(T1, L1, M1):
+    ax1.scatter(l, m, color=colours[t], marker="o")
+
+# Plot Reverberation Mapping
+for t, l, m in zip(T2, L2, M2):
+    ax1.scatter(l, m, color=colours[t], marker="s")
+
+# Plot Optical Luminosity
+for t, l, m in zip(T3, L3, M3):
+    ax1.scatter(l, m, color=colours[t], marker="^")
+
+# Plot Stellar Velocity Dispersion
+for t, l, m in zip(T4, L4, M4):
+    ax1.scatter(l, m, color=colours[t], marker="D")
+
+
 '''
 # Line of best fit
 coefficients = np.polyfit(L_bol, M_BH, 1)
@@ -1123,3 +1296,4 @@ def ACCR(dist):
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
+
