@@ -72,14 +72,14 @@ T4 = []
 # Extract values into lists
 for line in lines:
     values = line.split()
-    L4.append(float(values[6]))
-    M4.append(float(values[5]))
-    T4.append(values[8])
+    L4.append(float(values[2]))
+    M4.append(float(values[2]))
+    T4.append(values[2])
 
 # Print the lists to verify
 print("L4:", L4)
-print("M4:", M4)
-print("T4:", T4)
+#print("M4:", M4)
+#print("T4:", T4)
 '''
 
 
@@ -989,7 +989,7 @@ log_L2 = np.log10(10**np.array([
     10.56, 10.13, 9.05, 10.94, 10.18, 11.45, 9.94, 10.99, 9.69,
     10.46, 10.99, 9.13, 11.02, 10.83, 11.22, 10.01, 10.71, 9.32]))
 
-#L_bol = np.concatenate((L_bol, log_L), axis = None)
+L_bol = np.concatenate((L_bol1, log_L2), axis = None)
 
 M_BH1 = np.array([
     7.42, 8.55, 8.27, 7.91, 6.77, 7.86, 6.82, 6.69, 7.86, 7.20,
@@ -1001,6 +1001,10 @@ M_BH2 = np.array([7.15, 8.59, 8.57, 8.41, 7.68, 7.74, 8.18, 7.72,
     8.84, 7.97, 7.40, 8.44, 8.16, 8.95, 7.86, 8.64,
     7.54, 8.65, 9.11, 7.69, 8.45, 8.77, 8.89, 8.46, 8.16, 7.58])
 
+M_BH = np.concatenate((M_BH1, M_BH2), axis = None)
+
+
+
 
 
 
@@ -1008,6 +1012,7 @@ M_BH2 = np.array([7.15, 8.59, 8.57, 8.41, 7.68, 7.74, 8.18, 7.72,
 L1 = np.log10((10**np.array([44.98, 43.45]) / 3.826E+33))
 M1 = np.array([7.23, 7.62]) 
 T1 = np.array(["SY2", "SY2"])
+Z1 = np.array([0.004, 0.001])
 
 #Reverberaiton Mapping
 L2 = np.log10((10**np.array([45.34, 44.88, 44.91, 45.23, 44.78, 44.57, 44.71, 44.69, 45.03, 44.63, 
@@ -1024,6 +1029,11 @@ T2 = np.array(["SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "S
         "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "SY1", "RQQ",
         "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", 
         "RQQ", "RQQ", "RQQ", "RLQ", "RLQ"])
+
+Z2 = np.array([0.033, 0.056, 0.032, 0.047, 0.016, 0.022, 0.035, 0.026, 0.034, 0.026, 
+     0.032, 0.004, 0.009, 0.010, 0.002, 0.003, 0.009, 0.017, 0.016, 0.142, 
+     0.155, 0.100, 0.064, 0.239, 0.085, 0.064, 0.155, 0.087, 0.089, 0.086, 
+     0.129, 0.114, 0.292, 0.061, 0.158, 0.371])
 
 
 #Optical Luminoisty
@@ -1072,6 +1082,20 @@ T3 = np.array(["SY1", "SY1", "SY1", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "RQQ", "R
          'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 
          'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ', 'RLQ'])
 
+Z3 = np.array([0.036, 0.013, 0.005, 0.171, 0.164, 0.109, 0.155, 0.176, 0.190, 0.185,
+              0.086, 0.177, 0.165, 0.184, 0.164, 0.267, 0.146, 0.406, 0.333, 0.717,
+              0.395, 0.343, 0.637, 0.425, 0.859, 0.367, 0.831, 0.258, 0.226, 0.669,
+              0.186, 0.510, 2.224, 0.888, 0.852, 0.571, 0.574, 0.915, 0.454, 0.781, 0.444, 
+              0.405, 0.954, 0.194, 0.759, 0.545, 0.452, 0.324, 0.654, 0.455, 0.846, 0.191, 
+              0.631, 0.871, 0.684, 0.668, 0.427, 0.052, 0.698, 0.348, 0.712, 0.901, 0.24, 
+              0.612, 0.794, 0.197, 0.312, 0.525, 0.595, 0.311, 0.355, 0.157, 0.497, 0.734, 
+             0.266, 0.554, 0.656, 0.334, 0.258, 0.381, 0.789, 0.24, 0.751, 0.633, 0.321, 
+             0.536, 0.19, 0.286, 0.332, 0.72, 0.313, 0.803, 0.368, 0.314, 0.905, 0.219, 
+             0.361, 0.266, 0.412, 0.097, 1.401, 0.988, 0.75, 0.594, 0.751, 0.879, 0.449, 
+             0.206, 0.293, 0.714, 0.691, 0.657, 0.46, 0.302, 0.303, 0.626, 0.24, 0.104, 
+             1.012, 0.524, 0.932, 0.501, 0.2, 0.213, 0.698, 0.672, 0.298, 0.901, 0.655, 
+             0.237, 0.859, 0.926, 0.741, 0.671, 0.735, 0.673, 0.576, 0.173, 0.21])
+
 
 #Stellar velocity dispersions
 L4 = np.log10((10**np.array([44.45, 43.67, 43.54, 43.54, 44.61, 44.27, 42.52, 44.33, 
@@ -1097,6 +1121,13 @@ T4 = np.array(['SY1', 'SY1', 'SY1', 'SY1', 'SY1', 'SY1', 'SY2', 'SY2', 'SY2',
                'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 'SY2', 
                'SY2', 'SY2', 'SY2']) 
 
+Z4 = np.array([0.005, 0.002, 0.004, 0.003, 0.029, 0.016, 0.002, 0.014, 0.005, 
+               0.018, 0.009, 0.013, 0.003, 0.015, 0.008, 0.006, 0.008, 0.004, 0.028, 0.009, 
+               0.003, 0.004, 0.002, 0.023, 0.004, 0.008, 0.009, 0.008, 0.007, 0.028, 0.006,
+               0.023, 0.03, 0.013, 0.017, 0.006, 0.016, 0.014, 0.037, 0.01, 0.015, 0.029, 0.017, 
+               0.023, 0.014, 0.024, 0.042, 0.017, 0.012, 0.015, 0.018, 0.023, 0.011, 0.025, 0.016, 
+               0.016, 0.029])
+
 
 
 #Luminosity vs mass of black hole
@@ -1117,29 +1148,29 @@ fig.set_size_inches(10, 6)
 #ax1.plot(np.log10(luminosities), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='')
 ax1.plot(np.log10(LEdd/const.L_sun.to_value()), np.log10((Masses)/const.M_sun.to_value()), linestyle='-', color='black', label='Eddington limit')
 #ax1.errorbar(L_bol1, M_BH1, fmt='o', color='red', label='Observed Data')
-#ax1.errorbar(log_L2, M_BH2, fmt='o', color='green', label='Observed Data')
+#ax1.errorbar(log_L2, M_BH2, fmt='o', color='red', label='Observed Data')
 
 colours = {
     "SY1": "blue",
-    "SY2": "orange",
-    "RQQ": "purple",
-    "RLQ": "green"
+    "SY2": "purple",
+    "RQQ": "green",
+    "RLQ": "red"
 }
 
 # Plot Spatially Resolved Kinematics
-for t, l, m in zip(T1, L1, M1):
-    ax1.scatter(l, m, color=colours[t], marker="o")
+for t, l, m, z in zip(T1, L1, M1, Z1):
+    ax1.scatter(l, m, color=colours[t], marker="*")
 
 # Plot Reverberation Mapping
-for t, l, m in zip(T2, L2, M2):
+for t, l, m, z in zip(T2, L2, M2, Z2):
     ax1.scatter(l, m, color=colours[t], marker="s")
 
 # Plot Optical Luminosity
-for t, l, m in zip(T3, L3, M3):
+for t, l, m, z in zip(T3, L3, M3, Z3):
     ax1.scatter(l, m, color=colours[t], marker="^")
 
 # Plot Stellar Velocity Dispersion
-for t, l, m in zip(T4, L4, M4):
+for t, l, m, Z in zip(T4, L4, M4, Z4):
     ax1.scatter(l, m, color=colours[t], marker="D")
 
 
@@ -1153,9 +1184,58 @@ ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
 '''
 #ax1.set_xscale('log')
 #ax1.set_yscale('log')
+
+legend_handles = [
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Seyfert 1'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='purple', markersize=10, label='Seyfert 2'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='green', markersize=10, label='RQQ'),
+    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='RLQ')
+]
+
+# Add custom legend handles to the plot
+ax1.legend(handles=legend_handles, fontsize=12)
+
+ax1.set_ylabel(r'$\log\left(\frac{Mass}{M_\odot}\right)$', fontsize=16)
+ax1.set_xlabel(r'$\log\left(\frac{Luminosity}{L_\odot}\right)$', fontsize=16)
+plt.show()
+
+
+
+#Redshift vs mass of black hole
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+#ax1.plot(Z1, M1, linestyle='-', color='black', label='')
+#ax1.plot(Z2, M2, linestyle='-', color='black', label='')
+#ax1.plot(Z3, M3, linestyle='-', color='black', label='')
+#ax1.plot(Z4, M4, linestyle='-', color='black', label='')
+
+colours = {
+    "SY1": "blue",
+    "SY2": "orange",
+    "RQQ": "purple", #radio quiet quasar
+    "RLQ": "green" #radio loud quasar
+}
+
+# Plot Spatially Resolved Kinematics
+for t, l, m, z in zip(T1, L1, M1, Z1):
+    ax1.scatter(z, l, color=colours[t], linestyle='-')
+
+# Plot Reverberation Mapping
+for t, l, m, z in zip(T2, L2, M2, Z2):
+    ax1.scatter(z, l, color=colours[t], linestyle='--')
+
+# Plot Optical Luminosity
+for t, l, m, z in zip(T3, L3, M3, Z3):
+    ax1.scatter(z, l, color=colours[t], linestyle=':')
+
+# Plot Stellar Velocity Dispersion
+for t, l, m, Z in zip(T4, L4, M4, Z4):
+    ax1.scatter(z, l, color=colours[t], linestyle='-.')
+
 ax1.legend(fontsize=12)
-ax1.set_ylabel('log(Mass)', fontsize=16)
-ax1.set_xlabel('log(Luminosity)', fontsize=16)
+ax1.set_ylabel('Mass', fontsize=16)
+ax1.set_xlabel('Redshift', fontsize=16)
+plt.show()
 
 
 
@@ -1296,4 +1376,6 @@ def ACCR(dist):
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
+
+
 
