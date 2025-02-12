@@ -97,7 +97,7 @@ Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 Fstart = 10
 Fstop = 25
 Fsteps = 1000
-freq = np.logspace(Fstart, Fstop, Fsteps) #*u.Hz #Range of frequencies
+freq = np.logspace(Fstart, Fstop, Fsteps) #* u.Hz #Range of frequencies
 
 
 Nrings = 10000
@@ -127,6 +127,8 @@ def Rin2(M):
 
 def Rout(M):
   return (10**5) * Rg(M)   #Outermost orbit
+
+
 
 def R(M):
   return np.logspace(np.log10(Rin(M)), np.log10(Rout(M)), Nrings + 1)
@@ -200,12 +202,22 @@ def Temp(M, Ar, Radius, RIN):
   return T
 #print(Temp(MassBH, AccR, r_midpoints, rin))
 
-#Temp without viscous forces
-def Temp3(M, Ar, Radius):
-  a = (const.G.to_value()* M * Ar)
+
+#Schwarzschild radius#
+def R_s(M):
+  return (2 * const.G.to_value() * M) / const.c.to_value()**2
+
+
+#Temp from Frank et al. 1992       i think this is for max spinning black hole
+def Temp3(M, Ar, Radius, Rs):
+  a = (3 * const.G.to_value()* M * Ar)
   b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
-  T = (a / b)**(1/4)
+  c = ( Rs / Radius )**(1/2)
+  T = ((a / b) * (1 - c))**(1/4)
   return T
+
+
+
 
 #T2 = Temp2(MassBH, AccR, R_midpoints, Rin)
 #T3 = Temp3(MassBH, AccR, R_midpoints)
@@ -219,17 +231,17 @@ def Temp3(M, Ar, Radius):
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 8)
 
-fig.patch.set_facecolor('#D5D5D5') 
-ax1.set_facecolor('#D5D5D5') 
+#fig.patch.set_facecolor('#D5D5D5') 
+#ax1.set_facecolor('#D5D5D5') 
 
-ax1.plot(Rin(MassBH) + R_midpoints(MassBH), Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)), linestyle = '--', color = 'blue', label = 'Viscous')
-ax1.plot(Rin(Mass2) + R_midpoints(Mass2), Temp2(Mass2, AccR, R_midpoints(Mass2), Rin(Mass2)), color = 'red', label = '')
-ax1.set_xlim(0, 10e9)
+ax1.plot(Rin(MassBH) + R_midpoints(MassBH), Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)), color = 'black', label = 'Viscous')
+#ax1.plot(Rin(Mass2) + R_midpoints(Mass2), Temp2(Mass2, AccR, R_midpoints(Mass2), Rin(Mass2)), color = 'red', label = '')
+ax1.set_xlim(-0.03e7, 0.007e9)
 ax1.set_ylabel('Temperature (K)', fontsize=20)
 ax1.set_xlabel('Distance from centre of Black hole (m)', fontsize=20)
 ax1.tick_params(axis='x', labelsize=16)
 ax1.tick_params(axis='y', labelsize=16)
-ax1.legend(fontsize=16)
+#ax1.legend(fontsize=16)
 plt.show()
 '''
 
@@ -248,8 +260,29 @@ def Flux(T):
    Fv = a/(c-1)
    return Fv
 
+#so i can change the frequency bands
+def Flux3(T, freq):
+   temps = T.reshape(-1, 1)
+   freqs = freq.reshape(1, -1)
+   a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
+   b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
+   c = np.exp(b)
+   Fv = a/(c-1)
+   return Fv
 
 
+
+#Luminosity eddington limit
+def L_edd(Mass):
+  return (4 * np.pi * const.G.value * Mass * const.m_p.value * const.c.value)/const.sigma_T.value
+
+eta = 0.1  #standard efficiency with which mass is assumed to produce energy near the event horizon
+
+#max accretion rate
+def AccR_Edd(Mass):
+  return L_edd(Mass)/(eta * const.c.value**2)
+
+print(AccR_Edd(70e6*const.M_sun.to_value()))
 
 
 #print(Flux(Temp(MassBH, AccR, r_midpoints, rin)))
@@ -259,6 +292,194 @@ def Flux(T):
 #Lsum = np.sum(LL, axis = 0)
 #LogL = F * Area(Log_rMid)
 #LogLsum = np.sum(LL, axis = 0)
+
+
+def Lsum3(M, Ar, Radius, RIN, freq):
+  F = Flux3(Temp2(M, Ar, Radius, RIN), freq)
+  L = F * Area(Radius)
+  Lsum = np.sum(L, axis = 0)
+  return Lsum
+
+
+def Lsum(M, Ar, Radius, RIN):
+  F = Flux(Temp2(M, Ar, Radius, RIN))
+  L = F * Area(Radius)
+  Lsum = np.sum(L, axis = 0)
+  return Lsum
+
+#L from temp3
+def Lsum2(M, Ar, Radius, Rs):
+  F = Flux(Temp3(M, Ar, Radius, Rs))
+  L = F * Area(Radius)
+  Lsum = np.sum(L, axis = 0)
+  return Lsum
+
+
+
+#Flux to luminosity using redshift
+def Luminosity(F, z):
+  return F * 4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2
+
+
+
+#lum in erg s-1 Hz-1
+def Lv(Rs, i, M, Accr, freq):
+  a = (3 * const.G.to_value() * M * Accr)
+  b = 8 * np.pi * const.sigma_sb.to_value() * Rs**3
+  c = (a / b)**(1/4)
+  d = c**(8/3)
+  e = Rs**2
+  return 2.4e-18 * e * d * np.cos(i) * freq**(1/3)
+
+
+#Shukara Sunyaev 1976
+def AcRate(L, M):
+  return (L/(0.25*(2 * Rg(M)/Rin(M))))**(1/2)
+
+print(AcRate(Luminosity(5.19e-11, -0.00015677512474313146), 70e6*const.M_sun.to_value()))
+
+
+#flux received 
+def Flux2(L, z):
+  return L / (4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2)
+
+F1M81 = Flux2(Lsum(70e6*const.M_sun.to_value(), 0.00001*AccR_Edd(70e6*const.M_sun.to_value()), 
+R_midpoints(70e6*const.M_sun.to_value()), Rin(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+
+
+#accretion rate knowing mass and luminoisty
+#Mass in solar mass    Luminosity in 10^44 erg/s      Wavelegth in Angstrom      Accretion in solar mass per year
+def M_dot(Mass, Luminosity, Wavelength):
+  return np.exp(1.5*np.log(Wavelength*Luminosity) + 2*np.log(Wavelength) + 0.213 - np.log(Mass))
+
+print(M_dot(7e7, 7.89e-1*Luminosity(0.0001*6e-8, -0.00015677512474313146)/10e44, 100000)*const.M_sun.to_value()/(365.25*24*60*60))
+
+
+F2M81 = Flux2(Lsum(70e6*const.M_sun.to_value(), M_dot(7e7, 1*Luminosity(0.0001*6e-8, -0.00015677512474313146)/10e44, 10000)*const.M_sun.to_value()/(365.25*24*60*60), 
+R_midpoints(70e6*const.M_sun.to_value()), Rin(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+
+F3M81 = Flux2(Lsum2(70e6*const.M_sun.to_value(), M_dot(7e7, 1*Luminosity(0.0001*6e-8, -0.00015677512474313146)/10e44, 10000)*const.M_sun.to_value()/(365.25*24*60*60),
+R_midpoints(70e6*const.M_sun.to_value()), R_s(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+
+F4M81 = Flux2(Lsum2(70e6*const.M_sun.to_value(),0.00001*AccR_Edd(70e6*const.M_sun.to_value()),
+R_midpoints(70e6*const.M_sun.to_value()), R_s(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+
+F5M81 = Flux2(Lsum(70e6*const.M_sun.to_value(), AcRate(Luminosity(5.19e-11, -0.00015677512474313146), 70e6*const.M_sun.to_value()),
+R_midpoints(70e6*const.M_sun.to_value()), Rin(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+F6M81 = Flux2(Lsum2(70e6*const.M_sun.to_value(), AcRate(Luminosity(5.19e-11, -0.00015677512474313146), 70e6*const.M_sun.to_value()),
+R_midpoints(70e6*const.M_sun.to_value()), R_s(70e6*const.M_sun.to_value())), -0.00015677512474313146)
+
+
+
+VBand = const.c.to_value()/0.55e-6
+#np.logspace(np.log10(const.c.to_value()/0.44e-6), 
+#np.log10(const.c.to_value()/0.44e-6), 1000)
+
+F1M81_VBand = np.sum(Flux2(Lsum3(70e6*const.M_sun.to_value(),  AcRate(Luminosity(5.19e-11, -0.00015677512474313146), 70e6*const.M_sun.to_value()),
+R_midpoints(70e6*const.M_sun.to_value()), Rin(70e6*const.M_sun.to_value()), VBand), -0.00015677512474313146), axis = 0)
+
+#conversion to magnitude
+def mag(f):
+  return -2.5*np.log10(f) - 48.6
+
+print(mag(F1M81_VBand))
+
+em_spectrum = {
+    'Radio': (1e6 / 1e9, 3e9 / 1e9),
+    'Microwave': (3e9 / 1e9, 3e11 / 1e9),
+    'Infrared': (3e11 / 1e9, 4e14 / 1e9),
+    'Optical': (4e14 / 1e9, 7.5e14 / 1e9),
+    'Ultraviolet': (7.5e14 / 1e9, 3e16 / 1e9),
+    'X-ray': (3e16 / 1e9, 3e19 / 1e9),
+    'Gamma-ray': (3e19 / 1e9, 3e24 / 1e9)
+}
+
+
+
+#Plot of M81 perhaps
+fig, ax1 = plt.subplots()
+fig.set_size_inches(10, 6)
+
+#ax1.set_xlim(-0.3, 7)
+#ax1.set_ylim(-21, -10)
+
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F1M81), color='blue', linestyle='-', label='M81')
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F2M81), color='black', linestyle='-', label='Using eq accretion')
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F3M81), color='black', linestyle='--', label='Using Frank')
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F4M81), color='blue', linestyle='--', label='Using Frank')
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F5M81), color='purple', linestyle='-', label='L from S,S 1976')
+ax1.plot(np.log10((freq/10e9)), np.log10(freq * F6M81), color='purple', linestyle='--', label='L from S,S 1976 and Using Frank')
+
+
+colors = {
+    'Radio': 'lightblue',
+    'Microwave': 'lightgreen',
+    'Infrared': 'lightcoral',
+    'Optical': 'lightyellow',
+    'Ultraviolet': 'lightpink',
+    'X-ray': 'lightgray',
+    'Gamma-ray': 'lightcyan'
+}
+
+for band, (start, end) in em_spectrum.items():
+    ax1.axvspan(np.log10(start), np.log10(end), color=colors[band], alpha=0.3)
+
+
+ax1.set_ylabel(r'$\log_{10}(vF_v)$ W m$^{-2}$', fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(v)$ GHz', fontsize=16)
+
+ax1.legend(fontsize=12, loc='upper left')
+plt.show()
+
+
+
+
+
+
+
+
+#def rho():
+
+
+#def c_s():
+
+
+#def Bondi_accr(M, rho, c_s):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -517,39 +738,47 @@ plt.show()
 
 
 #Spectrums of black holes with different accretion rates
-''''
+'''
 accretion_rates = [0.1, 1, 10]  # Different accretion rates (in units of Eddington accretion rate)
 
-LLowEdd = (Flux(Temp2(MassBH, 0.1*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LLowEdd = (Flux(Temp2(MassSMBH2, 0.1*AccR_Edd(MassSMBH2), R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))  
 LLowEddSum = np.sum(LLowEdd, axis = 0)
-LAboveEdd = (Flux(Temp2(MassBH, 3*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+LAboveEdd = (Flux(Temp2(MassSMBH2, 3*AccR_Edd(MassSMBH2), R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))  
 LAEddSum = np.sum(LAboveEdd, axis = 0)
-LFarLessEdd = (Flux(Temp2(MassBH, 0.0001*AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
+L1Edd = (Flux(Temp2(MassSMBH2, AccR_Edd(MassSMBH2), R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))  
+L1EddSum = np.sum(L1Edd, axis = 0)
+LFarLessEdd = (Flux(Temp2(MassBH, 0.0001*AccR_Edd(MassSMBH2), R_midpoints(MassSMBH2), Rin(MassSMBH2)))) * Area(R_midpoints(MassSMBH2))  
 LFLEddSum = np.sum(LFarLessEdd, axis = 0)
-LumEdd2 = (Flux(Temp2(30*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
-LumEddsum2 = np.sum(LumEdd2, axis = 0)
-LumEdd3 = (Flux(Temp2(60*MassBH, AccR_Edd, R_midpoints, Rin))) * Area(R_midpoints)  
-LumEddsum3 = np.sum(LumEdd3, axis = 0)
+#LumEdd2 = (Flux(Temp2(30*MassBH, AccR_Edd, R_midpoints(MassSMBH2), Rin))) * Area(R_midpoints(MassSMBH2))  
+#LumEddsum2 = np.sum(LumEdd2, axis = 0)
+#LumEdd3 = (Flux(Temp2(60*MassBH, AccR_Edd, R_midpoints(MassSMBH2), Rin))) * Area(R_midpoints(MassSMBH2))  
+#LumEddsum3 = np.sum(LumEdd3, axis = 0)
+
+LumM81 = (Flux(Temp2(70e6 * const.M_sun.to_value(), 0.001*AccR_Edd(70e6 * const.M_sun.to_value()), R_midpoints(70e6 * const.M_sun.to_value()), 
+Rin(70e6 * const.M_sun.to_value())))) * Area(R_midpoints(70e6 * const.M_sun.to_value()))  
+LumM81Sum = np.sum(LumM81, axis = 0)
 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
-ax1.set_xlim(11, 20)
-ax1.set_ylim(15, 38)
+#ax1.set_xlim(9, 20)
+#ax1.set_ylim(15, 45)
 
-lowEdd, = ax1.plot(np.log10(freq), np.log10(freq * LLowEddSum), color='blue', linestyle='-', label='Accretion rate = 0.1 Edd')
-Edd1, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), color='red', linestyle='-', label='Accretion rate = 1 Edd')
-Edd2, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum2), color='red', linestyle=':')
-Edd3, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum3), color='red', linestyle='--')
-AboveEdd, = ax1.plot(np.log10(freq), np.log10(freq * LAEddSum), color='purple', linestyle='-', label='Accretion rate = 3 Edd')
-FarLessThanEdd, = ax1.plot(np.log10(freq), np.log10(freq * LFLEddSum), color='green', linestyle='-', label='Accretion rate = 0.001 Edd')
+#lowEdd, = ax1.plot(np.log10(freq), np.log10(freq * LLowEddSum), color='blue', linestyle='-', label='Accretion rate = 0.1 Edd')
+#Edd1, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), color='red', linestyle='-', label='Accretion rate = 1 Edd')
+#Edd11, = ax1.plot(np.log10(freq), np.log10(freq * L1EddSum), color='black', linestyle='-', label='Accretion rate = 1 Edd')
+#Edd2, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum2), color='red', linestyle=':')
+#Edd3, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum3), color='red', linestyle='--')
+#AboveEdd, = ax1.plot(np.log10(freq), np.log10(freq * LAEddSum), color='purple', linestyle='-', label='Accretion rate = 3 Edd')
+#FarLessThanEdd, = ax1.plot(np.log10(freq), np.log10(freq * LFLEddSum), color='green', linestyle='-', label='Accretion rate = 0.001 Edd')
+
+ax1.plot(np.log10(freq), np.log10(freq * LumM81Sum), color='blue', linestyle='-', label='M81')
 
 mass1_line = plt.Line2D([0], [0], color='black', linestyle='-', label='Mass = MassBH')
 mass30_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Mass = 30*MassBH')
 mass60_line = plt.Line2D([0], [0], color='black', linestyle='--', label='Mass = 60*MassBH')
 
-ax1.legend(handles=[FarLessThanEdd, lowEdd, Edd1, Edd2, Edd3, AboveEdd, 
-mass1_line, mass30_line, mass60_line], fontsize=12)
+ax1.legend(fontsize=12)
 
 
 ax1.set_ylabel(r'$\log_{10}(vL_v)$ W', fontsize=16)
@@ -1129,7 +1358,7 @@ Z4 = np.array([0.005, 0.002, 0.004, 0.003, 0.029, 0.016, 0.002, 0.014, 0.005,
                0.016, 0.029])
 
 
-
+'''
 #Luminosity vs mass of black hole
 Masses = np.linspace(10**6, 10**10, 100) * const.M_sun.to_value()
 luminosities = []
@@ -1172,7 +1401,7 @@ for t, l, m, z in zip(T3, L3, M3, Z3):
 # Plot Stellar Velocity Dispersion
 for t, l, m, Z in zip(T4, L4, M4, Z4):
     ax1.scatter(l, m, color=colours[t], marker="D")
-
+'''
 
 '''
 # Line of best fit
@@ -1184,7 +1413,7 @@ ax1.plot(x_fit, y_fit, linestyle='--', color='green', label='Best Fit Line')
 '''
 #ax1.set_xscale('log')
 #ax1.set_yscale('log')
-
+'''
 legend_handles = [
     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Seyfert 1'),
     plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='purple', markersize=10, label='Seyfert 2'),
@@ -1265,7 +1494,7 @@ ax1.errorbar(np.log10(Ac2), M_BH2, fmt='o', color='green', label='Observed Data'
 ax1.legend(fontsize=12)
 ax1.set_ylabel('Log(Mass)', fontsize=16)
 ax1.set_xlabel('Log(Accretion Rate)', fontsize=16)
-
+'''
 
 
 '''
@@ -1291,7 +1520,7 @@ ax1.set_ylabel('Log(Accretion Rate)', fontsize=16)
 ax1.set_xlabel('Log(Luminosity)', fontsize=16)
 '''
 
-plt.show()
+#plt.show()
 
 
 
@@ -1376,6 +1605,4 @@ def ACCR(dist):
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
-
-
 
