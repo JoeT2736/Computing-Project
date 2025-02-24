@@ -1,3 +1,89 @@
+#########Jackknife##########
+
+JKx, JKy, JKP = astats.jackknife_resampling(x_data), astats.jackknife_resampling(y_data), astats.jackknife_resampling(Time_mins)
+
+def Period(Position, initial_values):
+    f = astats.jackknife_resampling(Position)
+    
+    for i in range(len(JKP)):
+        def T(Position):
+            popt, _ = opt.curve_fit(model, JKP[i]/(24 * 60), f[i], sigma=10000, 
+                                absolute_sigma=True, p0=initial_values, check_finite=True, maxfev=50000)
+            return popt[1]
+        estimate, bias, stderr, conf_interval = astats.jackknife_stats(Position, T, 0.95)
+        
+        return estimate, bias, stderr, conf_interval
+
+#print(Period(x_data, initial_valuesx)) 
+#print(Period(y_data, initial_valuesy))
+#print(popt[1])
+
+#Specifically for x (gives different value of Period than the function, but the same bias and stderr)
+for i in range(len(JKP)):
+    def Period2(Position):
+        popt, _ = opt.curve_fit(model, JKP[i]/(24 * 60), JKx[i], sigma=10000, 
+                                absolute_sigma=True, p0=initial_valuesx, check_finite=True, maxfev=50000)
+        return popt[1]
+    
+    estimate, bias, stderr, conf_interval = astats.jackknife_stats(x_data, Period2, 0.95)
+
+#print('Jackknife Estimate = ', estimate)
+#print('Bias = ', bias)
+#print('Standard Error = ', stderr)
+#print('Confidence Interval = ', conf_interval)
+
+###########################
+
+
+
+
+#########Boosstrap##########
+
+import numpy as np
+from itertools import combinations, permutations, product
+from collections.abc import Sequence
+from dataclasses import dataclass, field
+import inspect
+
+from scipy._lib._util import (rng_integers)
+#from scipy._lib._array_api import array_namespace, is_numpy, xp_moveaxis_to_end
+#from scipy.special import ndtr, ndtri, comb, factorial
+
+
+
+#gives a random sample of data points 
+def bootstrap_resample(sample, n_resamples=None, rng=None):
+    """Bootstrap resample the sample."""
+    n = sample.shape[-1]
+
+    i = rng_integers(rng, 0, n, (n_resamples, n))
+
+    resamples = sample[..., i]
+    return resamples
+
+
+#def bootstrap(data, statistic, n_resamples):
+#    for i in range(len(data)):
+
+
+
+
+#t = scipy.stats.bootstrap(datas, opt.curve_fit(model,Time_mins/(24*60), x_data, sigma = 10000, absolute_sigma=True, p0=initial_valuesx, check_finite=True, maxfev=50000), n_resamples=9999, batch=None, vectorized=None, paired=False, 
+#                          axis=0, confidence_level=0.95, alternative='two-sided', method='BCa', bootstrap_result=None)
+
+#print(t)
+
+
+
+plt.plot(Time_mins/(24*60), x_data, 'o', label = 'Data')
+plt.plot(smooth_time, model(smooth_time, *popt), label = 'Fit')
+plt.show()
+
+
+
+
+
+
 #how far away can you see balck hole as function of accretion rate?????
 #set black hole at a distance then look at received flux ^^^
 #flux vs distance for observable BHs
