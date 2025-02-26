@@ -115,6 +115,7 @@ from astropy.cosmology import WMAP9 as cosmo
 from astropy.io.votable import parse
 import pandas as pd
 from astroquery.simbad import Simbad
+import scipy.integrate
 
 #def votable_to_pandas(votable_file):
  #   votable = parse(votable_file)
@@ -130,32 +131,149 @@ from astroquery.simbad import Simbad
 '''
 # Extracted data
 data = """
-NGC 7319 0.023 130. N 7.38 44.19 I SY2
-NGC 7603 0.030 194. N 8.08 44.66 I SY2
-NGC 7672 0.013 98. N 6.88 43.86 I SY2
-NGC 7682 0.017 123. N 7.28 43.93 I SY2
-NGC 7743 0.006 83. N 6.59 43.60 I SY2
-Mrk 1 0.016 115. N 7.16 44.20 I SY2
-Mrk 3 0.014 269. N 8.65 44.54 I SY2
-Mrk 78 0.037 172. N 7.87 44.59 I SY2
-Mrk 270 0.010 148. N 7.60 43.37 I SY2
-Mrk 348 0.015 118. N 7.21 44.27 I SY2
-Mrk 533 0.029 144. N 7.56 45.15 I SY2
-Mrk 573 0.017 123. N 7.28 44.44 I SY2
-Mrk 622 0.023 100. N 6.92 44.52 I SY2
-Mrk 686 0.014 144. N 7.56 44.11 I SY2
-Mrk 917 0.024 149. N 7.62 44.75 I SY2
-Mrk 1018 0.042 195. N 8.09 44.39 I SY2
-Mrk 1040 0.017 151. N 7.64 44.53 I SY2
-Mrk 1066 0.012 105. N 7.01 44.55 I SY2
-Mrk 1157 0.015 95. N 6.83 44.27 I SY2
-Akn 79 0.018 143. N 7.54 45.24 F SY2
-Akn 347 0.023 186. N 8.00 44.84 F SY2
-IC 5063 0.011 160. N 7.74 44.53 I SY2
-II ZW55 0.025 212. N 8.23 44.54 F SY2
-F 341 0.016 114. N 7.15 44.13 I SY2
-UGC 3995 0.016 155. N 7.69 44.39 I SY2
-UGC 6100 0.029 156. N 7.70 44.48 I SY2
+0.1611	3.266E-17	0.00000	0.00000
+0.1663	1.150E-18	0.00000	0.00000
+1.865	1.544E-17	0.00000	0.00000
+1.925	5.382E-17	0.00000	0.00000
+1.987	1.264E-17	0.00000	0.00000
+2.051	1.088E-17	0.00000	0.00000
+2.051	2.002E-19	0.00000	0.00000
+2.257	5.658E-17	0.00000	0.00000
+3.202	2.675E-17	0.00000	0.00000
+3.306	1.982E-17	0.00000	0.00000
+6.245	4.633E-17	0.00000	0.00000
+7.322	4.633E-17	0.00000	0.00000
+7.803	8.870E-17	0.00000	0.00000
+13.83	5.658E-17	0.00000	0.00000
+15.21	9.324E-17	0.00000	0.00000
+15.70	7.635E-17	0.00000	0.00000
+176.1	1.015E-23	0.00000	0.00000
+1631	2.246E-12	0.00000	0.00000
+3501	1.830E-11	0.00000	0.00000
+3851	1.110E-11	0.00000	0.00000
+5464	6.379E-11	0.00000	0.00000
+5641	2.897E-13	0.00000	0.00000
+5641	1.296E-12	0.00000	0.00000
+5641	5.491E-11	0.00000	0.00000
+5823	4.497E-11	0.00000	2961000
+9089	4.497E-11	0.00000	0.00000
+9383	4.774E-13	0.00000	0.00000
+9686	6.411E-12	0.00000	0.00000
+9686	9.094E-12	0.00000	0.00000
+14180	3.015E-11	0.00000	0.00000
+14180	3.503E-11	0.00000	0.00000
+16110	1.740E-11	0.00000	0.00000
+16630	3.186E-12	0.00000	0.00000
+17170	4.751E-12	0.00000	0.00000
+44580	1.432E-12	0.00000	0.00000
+44580	1.173E-12	0.00000	0.00000
+47510	6.411E-12	0.00000	0.00000
+50630	7.484E-13	0.00000	0.00000
+52260	8.230E-12	0.00000	0.00000
+52260	1.749E-12	0.00000	0.00000
+52260	1.607E-15	0.00000	0.00000
+63250	3.046E-13	0.00000	0.00000
+98730	3.366E-13	0.00000	0.00000
+98730	2.742E-12	0.00000	0.00000
+98730	1.749E-12	0.00000	0.00000
+101900	1.656E-11	0.00000	0.00000
+101900	3.701E-12	0.00000	0.00000
+101900	7.484E-13	0.00000	0.00000
+105200	1.227E-11	0.00000	0.00000
+149200	2.234E-11	0.00000	0.00000
+149200	3.382E-14	0.00000	0.00000
+154100	2.729E-11	0.00000	0.00000
+218600	2.125E-11	0.00000	0.00000
+233000	3.015E-11	0.00000	0.00000
+291100	1.740E-11	0.00000	0.00000
+291100	2.596E-11	0.00000	0.00000
+291100	1.749E-12	0.00000	0.00000
+291100	2.883E-12	0.00000	0.00000
+300500	3.871E-11	0.00000	0.00000
+375400	9.512E-11	0.00000	0.00000
+400100	4.497E-11	0.00000	0.00000
+413000	9.999E-11	0.00000	0.00000
+413000	1.227E-11	0.00000	0.00000
+413000	5.250E-12	0.00000	0.00000
+644700	1.820E-10	0.00000	0.00000
+644700	2.457E-10	0.00000	0.00000
+665500	2.223E-10	0.00000	0.00000
+858400	3.664E-10	0.00000	0.00000
+886100	4.944E-10	0.00000	0.00000
+886100	4.049E-10	0.00000	0.00000
+944300	4.751E-12	0.00000	0.00000
+944300	2.854E-10	0.00000	0.00000
+1217000	4.049E-10	0.00000	0.00000
+1217000	5.464E-10	0.00000	0.00000
+1257000	3.485E-10	0.00000	0.00000
+1339000	4.994E-12	0.00000	0.00000
+1570000	3.701E-12	0.00000	0.00000
+1674000	5.744E-10	0.00000	0.00000
+1674000	8.271E-13	0.00000	0.00000
+1783000	1.283E-10	0.00000	0.00000
+1783000	3.015E-11	0.00000	0.00000
+1841000	8.271E-13	0.00000	0.00000
+1962000	2.742E-12	0.00000	0.00000
+2025000	4.703E-10	0.00000	0.00000
+2091000	4.408E-17	0.00000	0.00000
+2091000	2.469E-11	0.00000	0.00000
+2159000	2.742E-12	0.00000	0.00000
+2159000	1.296E-12	0.00000	0.00000
+2228000	7.868E-13	0.00000	0.00000
+2531000	1.923E-11	0.00000	0.00000
+2612000	1.664E-12	0.00000	0.00000
+2697000	7.120E-13	0.00000	0.00000
+2697000	3.851E-10	0.00000	0.00000
+2874000	9.608E-13	0.00000	0.00000
+2874000	6.706E-11	0.00000	0.00000
+2967000	1.349E-10	0.00000	0.00000
+2967000	3.871E-11	0.00000	0.00000
+2967000	2.246E-12	0.00000	0.00000
+2967000	1.749E-12	0.00000	0.00000
+3063000	3.520E-12	0.00000	0.00000
+3162000	8.608E-11	0.00000	0.00000
+3478000	2.854E-10	0.00000	0.00000
+3591000	1.167E-11	0.00000	0.00000
+3707000	4.069E-11	0.00000	0.00000
+3707000	8.694E-13	0.00000	0.00000
+3827000	1.943E-13	0.00000	0.00000
+3827000	2.223E-10	0.00000	0.00000
+3950000	4.299E-12	0.00000	0.00000
+3950000	1.061E-12	0.00000	0.00000
+3950000	2.635E-14	0.00000	0.00000
+3950000	1.432E-12	0.00000	0.00000
+4078000	1.179E-13	0.00000	0.00000
+4078000	5.574E-14	0.00000	0.00000
+4078000	4.320E-13	0.00000	0.00000
+4781000	1.647E-10	0.00000	0.00000
+4781000	8.694E-13	0.00000	0.00000
+4781000	1.296E-12	0.00000	0.00000
+4935000	2.481E-12	0.00000	0.00000
+5095000	9.560E-12	0.00000	0.00000
+5260000	4.110E-13	0.00000	0.00000
+5260000	5.830E-13	0.00000	0.00000
+6571000	4.320E-13	0.00000	0.00000
+6571000	2.897E-13	0.00000	0.00000
+6784000	4.110E-13	0.00000	0.00000
+6784000	1.362E-12	0.00000	0.00000
+6784000	2.136E-12	0.00000	0.00000
+6784000	3.046E-13	0.00000	0.00000
+7704000	2.042E-13	0.00000	0.00000
+7704000	1.758E-13	0.00000	0.00000
+7953000	4.969E-11	0.00000	0.00000
+7953000	3.170E-11	0.00000	0.00000
+7953000	5.859E-14	0.00000	0.00000
+8210000	4.277E-11	0.00000	0.00000
+8475000	4.798E-14	0.00000	0.00000
+8749000	3.538E-13	0.00000	0.00000
+8749000	1.943E-13	0.00000	0.00000
+9032000	3.719E-13	0.00000	0.00000
+9625000	1.672E-13	0.00000	0.00000
+9625000	1.179E-13	0.00000	0.00000
+9625000	8.738E-14	0.00000	0.00000
+1.202E7	3.170E-11	0.00000	0.00000
+
+
 
 
 """
@@ -171,13 +289,13 @@ T4 = []
 # Extract values into lists
 for line in lines:
     values = line.split()
-    L4.append(float(values[2]))
-    M4.append(float(values[2]))
+    L4.append(float(values[0]))
+    M4.append(float(values[1]))
     T4.append(values[2])
 
 # Print the lists to verify
 print("L4:", L4)
-#print("M4:", M4)
+print("M4:", M4)
 #print("T4:", T4)
 '''
 
@@ -194,7 +312,7 @@ AccR2 = 10**10 #*u.kg/u.s
 Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 
 Fstart = 10
-Fstop = 25
+Fstop = 30
 Fsteps = 1000
 freq = np.logspace(Fstart, Fstop, Fsteps) #* u.Hz #Range of frequencies
 
@@ -301,7 +419,7 @@ def Temp2(M, Ar, Radius, Rin):
 
 
 
-
+'''
 #Temperatue equation for scaled units
 def Temp(M, Ar, Radius, RIN):
   a = (3 * const.G.to_value()* M * Ar)
@@ -324,7 +442,7 @@ def Temp3(M, Ar, Radius, Rs):
   c = ( Rs / Radius )**(1/2)
   T = ((a / b) * (1 - c))**(1/4)
   return T
-
+'''
 
 
 
@@ -365,10 +483,18 @@ def Flux(T):
    freqs = freq.reshape(1, -1)
    a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
    b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
+   #b = b.astype(np.float32)
+   #b = np.clip(b, -100, 100)
    c = np.exp(b)
    Fv = a/(c-1)
    return Fv
 
+
+
+  
+#print(Flux(Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH))))
+
+'''
 #so i can change the frequency bands
 def Flux3(T, freq):
    temps = T.reshape(-1, 1)
@@ -378,7 +504,7 @@ def Flux3(T, freq):
    c = np.exp(b)
    Fv = a/(c-1)
    return Fv
-
+'''
 
 
 #Luminosity eddington limit
@@ -402,12 +528,14 @@ def AccR_Edd(Mass):
 #LogL = F * Area(Log_rMid)
 #LogLsum = np.sum(LL, axis = 0)
 
-
+'''
 def Lsum3(M, Ar, Radius, RIN, freq):
   F = Flux3(Temp2(M, Ar, Radius, RIN), freq)
   L = F * Area(Radius)
   Lsum = np.sum(L, axis = 0)
   return Lsum
+'''
+
 
 
 def Lsum(M, Ar, Radius, RIN):
@@ -416,6 +544,7 @@ def Lsum(M, Ar, Radius, RIN):
   Lsum = np.sum(L, axis = 0)
   return Lsum
 
+'''
 #L from temp3
 def Lsum2(M, Ar, Radius, Rs):
   F = Flux(Temp3(M, Ar, Radius, Rs))
@@ -429,18 +558,18 @@ def Lsum4(M, Ar, Radius, RIN):
   L = F * Area(Radius) * 4 * np.pi * Rg(M)**2  #idk how the scaled units work 
   Lsum = np.sum(L, axis = 0)
   return Lsum
-
+'''
 
 #print(Lsum4(MassBH, AccR, r(MassBH), rin(MassBH)))
 
 
 
 #Flux to luminosity using redshift
-def Luminosity(F, z):
-  return F * 4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2
+#def Luminosity(F, z):
+#  return F * 4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2
 
 
-
+'''
 #lum in erg s-1 Hz-1
 def Lv(Rs, i, M, Accr, freq):
   a = (3 * const.G.to_value() * M * Accr)
@@ -460,13 +589,14 @@ def AcRate(L, M):
 #Bolometric corrections
 def Lum_BolCorr(Lband, K):
   return Lband * K
-
+'''
 
 
 #flux received 
-def Flux2(L, z):
-  return L / (4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2)
+#def Flux2(L, z):
+#  return L / (4 * np.pi * cosmo.luminosity_distance(z).to(u.m).value**2)
 
+'''
 F1M81 = Flux2(Lsum(70e6*const.M_sun.to_value(), 0.00001*AccR_Edd(70e6*const.M_sun.to_value()), 
 R_midpoints(70e6*const.M_sun.to_value()), Rin(70e6*const.M_sun.to_value())), -0.00015677512474313146)
 
@@ -539,7 +669,7 @@ F0H = 1.08e-20 * 1000
 F0K = 0.67e-20 * 1000
 
 F0s = [F0U, F0B, F0V, F0R, F0I, F0J, F0H, F0K]
-
+'''
 '''
 mags = {13.551, 12.18, 11.48, 12.284, 11.613, 11.081, 10.448, 8.5, 7.788, 7.381}
 
@@ -590,6 +720,8 @@ ax1.legend(fontsize=12, loc='upper left')
 plt.show()
 '''
 
+
+'''
 Lsun = 3.828e33  #Luminosity of sun in erg s-1
 
 #luminosity given b-band magnitude
@@ -614,18 +746,356 @@ R_midpoints(886e6*const.M_sun.to_value()), Rin(886e6*const.M_sun.to_value())), 0
 #Plot of Seyfert 1 NGC 6814
 FNGC6814 = Flux2(Lsum(3.9e6*const.M_sun.to_value(), AcRate(Luminosity(1.23e-12, 0.00579177), 3.9e6*const.M_sun.to_value()),
 R_midpoints(3.9e6*const.M_sun.to_value()), Rin(3.9e6*const.M_sun.to_value())), 0.00579177)
+'''
+
+
+
+
+
+
+
+
+
+M81x = np.array([0.1611, 0.1663, 1.865, 1.925, 1.987, 2.051, 2.051, 2.257, 3.202, 3.306, 6.245, 7.322, 7.803, 13.83, 15.21, 15.7, 176.1, 1631.0, 3501.0, 3851.0, 5464.0, 5641.0, 5641.0, 5641.0, 5823.0, 9089.0, 9383.0, 9686.0, 9686.0, 14180.0, 14180.0, 16110.0, 16630.0, 17170.0, 44580.0, 44580.0, 47510.0, 50630.0, 52260.0, 52260.0, 52260.0, 63250.0, 98730.0, 98730.0, 98730.0, 101900.0, 101900.0, 101900.0, 105200.0, 149200.0, 149200.0, 154100.0, 218600.0, 233000.0, 291100.0, 291100.0, 291100.0, 291100.0, 300500.0, 375400.0, 400100.0, 413000.0, 413000.0, 413000.0, 644700.0, 644700.0, 665500.0, 858400.0, 886100.0, 886100.0, 944300.0, 944300.0, 1217000.0, 1217000.0, 1257000.0, 1339000.0, 1570000.0, 1674000.0, 1674000.0, 1783000.0, 1783000.0, 1841000.0, 1962000.0, 2025000.0, 2091000.0, 2091000.0, 2159000.0, 2159000.0, 2228000.0, 2531000.0, 2612000.0, 2697000.0, 2697000.0, 2874000.0, 2874000.0, 2967000.0, 2967000.0, 2967000.0, 2967000.0, 3063000.0, 3162000.0, 3478000.0, 3591000.0, 3707000.0, 3707000.0, 3827000.0, 3827000.0, 3950000.0, 3950000.0, 3950000.0, 3950000.0, 4078000.0, 4078000.0, 4078000.0, 4781000.0, 4781000.0, 4781000.0, 4935000.0, 5095000.0, 5260000.0, 5260000.0, 6571000.0, 6571000.0, 6784000.0, 6784000.0, 6784000.0, 6784000.0, 7704000.0, 7704000.0, 7953000.0, 7953000.0, 7953000.0, 8210000.0, 8475000.0, 8749000.0, 8749000.0, 9032000.0, 9625000.0, 9625000.0, 9625000.0, 12020000.0])
+M81y = np.array([3.266e-17, 1.15e-18, 1.544e-17, 5.382e-17, 1.264e-17, 1.088e-17, 2.002e-19, 5.658e-17, 2.675e-17, 1.982e-17, 4.633e-17, 4.633e-17, 8.87e-17, 5.658e-17, 9.324e-17, 7.635e-17, 1.015e-23, 2.246e-12, 1.83e-11, 1.11e-11, 6.379e-11, 2.897e-13, 1.296e-12, 5.491e-11, 4.497e-11, 4.497e-11, 4.774e-13, 6.411e-12, 9.094e-12, 3.015e-11, 3.503e-11, 1.74e-11, 3.186e-12, 4.751e-12, 1.432e-12, 1.173e-12, 6.411e-12, 7.484e-13, 8.23e-12, 1.749e-12, 1.607e-15, 3.046e-13, 3.366e-13, 2.742e-12, 1.749e-12, 1.656e-11, 3.701e-12, 7.484e-13, 1.227e-11, 2.234e-11, 3.382e-14, 2.729e-11, 2.125e-11, 3.015e-11, 1.74e-11, 2.596e-11, 1.749e-12, 2.883e-12, 3.871e-11, 9.512e-11, 4.497e-11, 9.999e-11, 1.227e-11, 5.25e-12, 1.82e-10, 2.457e-10, 2.223e-10, 3.664e-10, 4.944e-10, 4.049e-10, 4.751e-12, 2.854e-10, 4.049e-10, 5.464e-10, 3.485e-10, 4.994e-12, 3.701e-12, 5.744e-10, 8.271e-13, 1.283e-10, 3.015e-11, 8.271e-13, 2.742e-12, 4.703e-10, 4.408e-17, 2.469e-11, 2.742e-12, 1.296e-12, 7.868e-13, 1.923e-11, 1.664e-12, 7.12e-13, 3.851e-10, 9.608e-13, 6.706e-11, 1.349e-10, 3.871e-11, 2.246e-12, 1.749e-12, 3.52e-12, 8.608e-11, 2.854e-10, 1.167e-11, 4.069e-11, 8.694e-13, 1.943e-13, 2.223e-10, 4.299e-12, 1.061e-12, 2.635e-14, 1.432e-12, 1.179e-13, 5.574e-14, 4.32e-13, 1.647e-10, 8.694e-13, 1.296e-12, 2.481e-12, 9.56e-12, 4.11e-13, 5.83e-13, 4.32e-13, 2.897e-13, 4.11e-13, 1.362e-12, 2.136e-12, 3.046e-13, 2.042e-13, 1.758e-13, 4.969e-11, 3.17e-11, 5.859e-14, 4.277e-11, 4.798e-14, 3.538e-13, 1.943e-13, 3.719e-13, 1.672e-13, 1.179e-13, 8.738e-14, 3.17e-11])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
 #using scipy optimize to fit the accretion disc model to the data
-
+'''
 def model(M, z, AccR):
   return Flux2(Lsum(M, AccR, R_midpoints(M), Rin(M)), z)
 
-popt, cov = scipy.optimize.curve_fit(model, '''x_data''', '''y_data''', sigma = 10000, absolute_sigma=True, 
-                                     p0='''initial_valuesx''', check_finite=True, maxfev=50000)
+popt = scipy.optimize.curve_fit(model, M81x*10e9, M81y)
+
+
+print(popt)
+'''
+
+
+#print(np.log10(M81x), np.log10(M81y))
+#print(len(M81x), len(M81y))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########## Matrix attempt for luminosity increase with mass and with accretion rate ##########
+
+
+'''
+# Plot the spectrum for each mass
+plt.figure(figsize=(8, 6))
+plt.xlim(9, 18)
+plt.ylim(24, 31)
+
+
+for M in MassList:
+    LBol = Lsum(M, Ar, R_midpoints(M), Rin(M))  # Assume Accretion Rate = 0.1
+    plt.plot(np.log10(freq), np.log10(freq * LBol), label=f"M = {M:.1e} M☉")  # Plot freq × Luminosity(freq)
+    #print(scipy.integrate.trapezoid(L, freq))
+    TotalL = scipy.integrate.trapezoid(LBol, freq)
+
+plt.xlabel("Frequency (Hz)")
+plt.ylabel(r"$\nu L_\nu$ (W)")
+plt.title("Spectra of Accretion Disks for Different Black Hole Masses")
+plt.legend(loc="best", fontsize=8)
+#plt.show()
+
+
+def FluxV(T):
+  temps = T.reshape(-1, 1)
+  freqs = VisibleF.reshape(1, -1)
+  a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
+  b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
+  c = np.exp(b)
+  Fv = a/(c-1)
+  return Fv
+
+def FluxX(T):
+  temps = T.reshape(-1, 1)
+  freqs = XrayF.reshape(1, -1)
+  a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
+  b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
+  c = np.exp(b)
+  Fv = a/(c-1)
+  return Fv
+
+for M in MassList: 
+  LVis = np.sum(FluxV(Temp2(M, Ar, R_midpoints(M), Rin(M))) * Area(R_midpoints(M)), axis = 0)
+  TotLVis = scipy.integrate.trapezoid(LVis, VisibleF)
+
+for M in MassList:
+  LXray = np.sum(FluxX(Temp2(M, Ar, R_midpoints(M), Rin(M))) * Area(R_midpoints(M)), axis = 0)
+  TotLXray = scipy.integrate.trapezoid(LXray, XrayF)
+'''
+
+VisibleF = (np.logspace(np.log10(420), np.log10(564), 1000)/10e9)*const.c.to_value()
+XrayF = (np.logspace(np.log10(1), np.log10(100), 1000)/10e12)*const.c.to_value()
+MassList = np.logspace(3, 10, 50) * const.M_sun.to_value() 
+Mass = 10**8*const.M_sun.to_value()
+Ar = 10**15
+AccList = np.logspace(np.log10(10e7), np.log10(10e30/5), 50)
+
+############################ 2D cases ############################
+'''
+################## Changing mass ################## 
+
+MmBol = np.empty(len(MassList))
+MmVis= np.zeros(len(MassList)) 
+MmXray = np.zeros(len(MassList))
+MmVX = np.zeros(len(MassList))
+
+for i, M in enumerate(MassList):
+    LBol = Lsum(M, Ar, R_midpoints(M), Rin(M))  
+    MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
+    maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
+    maskXray = (freq >= 1e16) & (freq <= 1e19)
+
+    LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
+    LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
+
+    MmVis[i] = LVis 
+    MmXray[i] = LXray
+    MmVX[i] = LVis/LXray if LXray > 0 else np.nan
+    
+mLBolmatrix = np.vstack((MassList, MmBol)).T
+mLVismatrix = np.vstack((MassList, MmVis)).T
+mLXraymatrix = np.vstack((MassList, MmXray)).T
+mLVXmatrix = np.vstack((MassList, MmVX)).T
+
+###################################################
+
+
+################## Changing accretion rate ##################
+
+AmBol = np.empty(len(AccList))
+AmVis= np.zeros(len(AccList)) 
+AmXray = np.zeros(len(AccList))
+AmVX = np.zeros(len(AccList))
+
+for j, Acc in enumerate(AccList):
+  LBol = Lsum(Mass, Acc, R_midpoints(Mass), Rin(Mass))
+  AmBol[j] = scipy.integrate.trapezoid(LBol, freq)
+  maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
+  maskXray = (freq >= 1e16) & (freq <= 1e19)
+
+  LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
+  LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
+
+  AmVis[j] = LVis 
+  AmXray[j] = LXray
+  AmVX[j] = LVis/LXray if LXray > 0 else np.nan
+
+aLBolematrix = np.vstack((AccList, AmBol)).T
+aLVismatrix = np.vstack((AccList, AmVis)).T
+aLXraymatrix = np.vstack((AccList, AmXray)).T
+aLVXmatrix = np.vstack((AccList, AmVX)).T
+
+###########################################################
+
+plt.figure(figsize=(8, 6))
+#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVis), linestyle='-', label='Visible')
+#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmXray), linestyle='-', label='X-ray')
+#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmBol), linestyle='-', label='Total Luminosity')
+plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVX), linestyle='-', label='Visible/X-ray')
+plt.xlabel("Log(Accretion Rate) [M☉/s]")
+plt.ylabel("Log(Luminosity) ")
+plt.legend()
+
+
+plt.figure(figsize=(8, 6))
+#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVis), linestyle='-', label='Visible')
+#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmXray), linestyle='-', label='X-ray')
+#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmBol), linestyle='-', label='Total Luminosity')
+plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX), linestyle='-', label='Visible/X-ray')
+plt.xlabel("Log(Mass) [M☉]")
+plt.ylabel("Log(Luminosity) ")
+plt.legend()
+plt.show()
+'''
+
+'''
+for acc, lum in aLBolematrix:
+    print(f"{acc:.2e}   |   {lum:.2e}")
+
+for acc, lum in aLVismatrix:
+    print(f"{acc:.2e}   |   {lum:.2e}")
+
+for acc, lum in aLXraymatrix:
+    print(f"{acc:.2e}   |   {lum:.2e}")
+
+
+print("Mass (M☉)   |   Total Luminosity (erg/s)")
+print("----------------------------------------")
+
+for mass, lum in mLVismatrix:
+    print(f"{mass/const.M_sun.to_value():.2e}   |   {lum:.2e}")
+
+for mass, lum in mLXraymatrix:
+    print(f"{mass/const.M_sun.to_value():.2e}   |   {lum:.2e}")
+
+for mass, lum in mLBolmatrix:
+    print(f"{mass/const.M_sun.to_value():.2e}   |   {lum:.2e}")
+'''
+
+########################################################################################
+
+
+
+
+
+
+
+
+
+
+
+#################################### 3D cases ##########################################
+mBolematrix = np.zeros((len(MassList), len(AccList)))
+mVismatrix = np.zeros((len(MassList), len(AccList)))
+mXraymatrix = np.zeros((len(MassList), len(AccList)))
+mVisXray = np.zeros((len(MassList), len(AccList)))
+
+for i, M in enumerate(MassList):
+  for j, Acc in enumerate(AccList):
+    L_tot = Lsum(M, Acc, R_midpoints(M), Rin(M))
+
+    maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
+    maskXray = (freq >= 1e16) & (freq <= 1e19)
+
+    LVis = scipy.integrate.trapezoid(L_tot[maskVis], freq[maskVis])
+    LXray = scipy.integrate.trapezoid(L_tot[maskXray], freq[maskXray])
+
+    #mBolematrix[i, j] = scipy.integrate.trapezoid(L_tot, freq)
+    #mVismatrix[i, j] = LVis
+    #mXraymatrix[i, j] = LXray
+    mVisXray[i, j] = LVis / LXray if LXray > 0 else np.nan
+
+
+
+MassGrid, AccGrid = np.meshgrid(MassList, AccList/AccR_Edd(MassList), indexing='ij')
+
+#Bol = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mBolematrix.ravel())).T
+#Vis = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVismatrix.ravel())).T
+#Xray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mXraymatrix.ravel())).T
+VisXray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
+
+#h = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
+
+#for mass, acc, visxray in Bol:
+#  print(f"{mass/const.M_sun.to_value():.2e}   |   {acc:.2e}   |   {visxray:.2e}")#
+
+#for mass, acc, visxray in Vis:
+#  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
+
+#for mass, acc, visxray in Xray:
+#  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
+
+for mass, acc, visxray in VisXray:
+  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
+
+# 3D Plot 
+fig = plt.figure(figsize=(12, 9))
+ax = fig.add_subplot(111, projection='3d')
+#ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mBolematrix))
+#ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mVismatrix), cmap='viridis')
+#ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mXraymatrix), cmap='viridis')
+ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mVisXray), cmap='viridis')
+
+#ax.set_zlim(20, 40)
+
+ax.set_xlabel('log10(Mass)')
+ax.set_zlabel('log10(Luminosity )')
+ax.set_ylabel('log10(Accretion Rate)')
+plt.show()
+
+########################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -639,10 +1109,10 @@ popt, cov = scipy.optimize.curve_fit(model, '''x_data''', '''y_data''', sigma = 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
-ax1.set_xlim(-0.3, 7)
-ax1.set_ylim(-21, 0)
+ax1.set_xlim(-0.3, 9)
+ax1.set_ylim(-21, -10)
 
-ax1.plot(np.log10((freq/10e9)), np.log10(freq * F3C273), color='black', linestyle='-', label='Radio-loud 3C 273')
+#ax1.plot(np.log10((freq/10e9)), np.log10(freq * F3C273), color='black', linestyle='-', label='Radio-loud 3C 273')
 
 
 
@@ -652,13 +1122,14 @@ R_midpoints(3.9e6*const.M_sun.to_value()), Rin(3.9e6*const.M_sun.to_value())), 0
 
 
 
-ax1.plot(np.log10((freq/10e9)), np.log10(freq * FNGC6814), color='green', linestyle='-', label='Seyfert 1 NGC 6814')
+#ax1.plot(np.log10((freq/10e9)), np.log10(freq * FNGC6814), color='green', linestyle='-', label='Seyfert 1 NGC 6814')
 
 
 #Plot of Seyfert 2 M81
 ax1.plot(np.log10((freq/10e9)), np.log10(freq * F5M81), color='purple', linestyle='-', label='Seyfer 2 M81')
+ax1.scatter(np.log10(M81x), np.log10(M81y), color='black', marker='o', label='Data points')
 
-print(np.sum(F3C273), np.sum(FNGC6814), np.sum(F5M81))
+#print(np.sum(F3C273), np.sum(FNGC6814), np.sum(F5M81))
 
 colors = {
     'Radio': 'lightblue',
@@ -867,8 +1338,8 @@ plt.show()
 
 #L in terms of B-band luminosity(erg s-1)/10e9*L_sun
 #M in terms of mass/10e8*M_sun
-def Accretion(M, L):
-  return (L/(13.8 * M**(2/3)))**(3/2)
+#def Accretion(M, L):
+#  return (L/(13.8 * M**(2/3)))**(3/2)
 
 
 
@@ -941,7 +1412,7 @@ plt.show()
 
 
 
-
+'''
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
 
@@ -987,7 +1458,7 @@ def TimeTaken(M, Mf):
 
 Massss = np.linspace(0.001 * const.M_sun.to_value(), 1e5 * const.M_sun.to_value(), 1000)
 time_taken = [TimeTaken([m], 1e9 * const.M_sun.to_value()) for m in Massss]
-'''
+
 fig, ax2 = plt.subplots()
 fig.set_size_inches(10, 6)
 ax2.plot(np.log10(Massss/const.M_sun.to_value()), np.log10(np.array(time_taken)/(60*60*24*365.25)), color='blue', linestyle='-')
@@ -1023,7 +1494,7 @@ LumMilestonesum = np.sum(LumMilestone, axis = 0)
 #milestone values, max spin black hole
 L3 = (Flux(Temp2(MassBH, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2) 
 L3sum = np.sum(L3, axis = 0)
-'''
+
 
 
 #Object mass = mass of sun
@@ -1031,25 +1502,24 @@ LumSunMass = (Flux(Temp2(Mass2, AccR, R_midpoints(Mass2), Rin(Mass2)))) * Area(R
 LumSunMass2um = np.sum(LumSunMass, axis = 0)
 
 
-'''
+
 #mass of sun with spin
 LumSunMass2pin = (Flux(Temp2(Mass2, AccR, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumSunMass2umSpin = np.sum(LumSunMass2pin, axis = 0)
-'''
 
-'''
+
 #Different accretion rate
 LumdAccr = (Flux(Temp2(MassBH, AccR2, R_midpoints, Rin))) * Area(R_midpoints)
 LumdAccrSum = np.sum(LumdAccr, axis = 0)
-'''
 
-'''
+
+
 #D Accr with spin
 LumdAccrSpin = (Flux(Temp2(MassBH, AccR2, R_midpoints2, Rin2))) * Area(R_midpoints2)
 LumdAccrSumSpin = np.sum(LumdAccrSpin, axis = 0)
 '''
 
-
+'''
 #Luminosity eddington limit
 def L_edd(Mass):
   return (4 * np.pi * const.G.value * Mass * const.m_p.value * const.c.value)/const.sigma_T.value
@@ -1066,6 +1536,8 @@ def AccR_Edd(Mass):
 
 LumEdd = (Flux(Temp2(MassBH, AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH)))) * Area(R_midpoints(MassBH))  
 LumEddsum = np.sum(LumEdd, axis = 0)
+'''
+
 
 
 '''
@@ -1094,7 +1566,7 @@ LumSMBH3sum = np.sum(LumSMBH3, axis = 0)
 TotLumMilestone = scipy.integrate.trapezoid(LumMilestonesum, freq)*u.W  #.to(u.W)
 #TotLscaled = scipy.integrate.trapezoid(LscaledSum, freq)*u.W  #.to(u.W)
 #TotL3 = scipy.integrate.trapezoid(L3sum, freq)*u.W  #.to(u.W)
-TotLumSunMass = scipy.integrate.trapezoid(LumSunMass2um, freq)*u.W  #.to(u.W)
+#TotLumSunMass = scipy.integrate.trapezoid(LumSunMass2um, freq)*u.W  #.to(u.W)
 #TotLumSunMass2pin = scipy.integrate.trapezoid(LumSunMass2umSpin, freq)*u.W  #.to(u.W)
 #TotLumdAccr = scipy.integrate.trapezoid(LumdAccrSum, freq)*u.W  #.to(u.W)
 #TotLumdAccrSpin = scipy.integrate.trapezoid(LumdAccrSumSpin, freq)*u.W  #.to(u.W)
@@ -1102,17 +1574,19 @@ TotLumSunMass = scipy.integrate.trapezoid(LumSunMass2um, freq)*u.W  #.to(u.W)
 TotLumSMBH1 = scipy.integrate.trapezoid(LumSMBH1sum, freq)*u.W
 TotLumSMBH2 = scipy.integrate.trapezoid(LumSMBH2sum, freq)*u.W
 TotLumSMBH3 = scipy.integrate.trapezoid(LumSMBH3sum, freq)*u.W
-TotLumEdd = scipy.integrate.trapezoid(LumEddsum, freq)*u.W
+#TotLumEdd = scipy.integrate.trapezoid(LumEddsum, freq)*u.W
 
 
-'''
-print(f'(2) L sum = {TotLumSunMass}')
-print(f'(Milestone) L sum = {TotLumMilestone}')
-print(f'(1) L sum = {TotLumSMBH1}')
-print(f'(2) L sum = {TotLumSMBH2}')
-print(f'(3) L sum = {TotLumSMBH3}')
-print(f'(Eddington) L sum = {TotLumEdd}')
-'''
+
+
+
+#print(f'(2) L sum = {TotLumSunMass}')
+#print(f'(Milestone) L sum = {TotLumMilestone}')
+#print(f'(1) L sum = {TotLumSMBH1}')
+#print(f'(2) L sum = {TotLumSMBH2}')
+#print(f'(3) L sum = {TotLumSMBH3}')
+#print(f'(Eddington) L sum = {TotLumEdd}')
+
 
 
 '''
@@ -1159,11 +1633,11 @@ ax1.set_xlim(7, 20)
 ax1.set_ylim(15, 35)
 
 d, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label='10')
-e, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), linestyle='-', color='purple', label='Eddington Limit (10)')
+#e, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), linestyle='-', color='purple', label='Eddington Limit (10)')
 a, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH1sum), linestyle='-', color='green', label='10^7')
 b, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH2sum), linestyle='-', color='blue', label='10^9')
 c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color='red', label='10^11')
-f, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='brown', label='10^4')
+#f, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='brown', label='10^4')
 #g, = ax1.plot(np.log10(freq), np.log10(Lsum4(MassBH, AccR, r(MassBH), rin(MassBH))), linestyle='-', color='orange', label='scaled')
 
 
@@ -1214,7 +1688,6 @@ peak_indices = {
 peak_frequencies = {key: freq[idx] for key, idx in peak_indices.items()}
 peak_y_values = {key: np.log10(freq[peak_indices[key]] * value[peak_indices[key]]) for key, value in zip(peak_indices.keys(),
 [LumSMBH1sum, LumSMBH2sum, LumSMBH3sum])}
-
 
 
 print("Peak frequencies (Hz) and corresponding Luminosities (W):")
@@ -1702,7 +2175,7 @@ for key in peak_frequencies:
 
 plt.show()
 '''
-
+'''
 #Magnitude to flux equation (flux in watts per square kilometer)
 def flux(mag):
     return 10**((-mag)/2.5) * flux_ref_B
@@ -1888,7 +2361,7 @@ Z4 = np.array([0.005, 0.002, 0.004, 0.003, 0.029, 0.016, 0.002, 0.014, 0.005,
                0.023, 0.03, 0.013, 0.017, 0.006, 0.016, 0.014, 0.037, 0.01, 0.015, 0.029, 0.017, 
                0.023, 0.014, 0.024, 0.042, 0.017, 0.012, 0.015, 0.018, 0.023, 0.011, 0.025, 0.016, 
                0.016, 0.029])
-
+'''
 
 '''
 #Luminosity vs mass of black hole
