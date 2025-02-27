@@ -911,14 +911,14 @@ MmVX = np.zeros(len(MassList))
 
 for i, M in enumerate(MassList):
     LBol = Lsum(M, Ar, R_midpoints(M), Rin(M))  
-    MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
     maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
     maskXray = (freq >= 1e16) & (freq <= 1e19)
 
     LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
     LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
 
-    MmVis[i] = LVis 
+    MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
+    MmVis[i] = LVis     
     MmXray[i] = LXray
     MmVX[i] = LVis/LXray if LXray > 0 else np.nan
     
@@ -1020,29 +1020,33 @@ mVismatrix = np.zeros((len(MassList), len(AccList)))
 mXraymatrix = np.zeros((len(MassList), len(AccList)))
 mVisXray = np.zeros((len(MassList), len(AccList)))
 
+
 for i, M in enumerate(MassList):
   for j, Acc in enumerate(AccList):
-    L_tot = Lsum(M, Acc, R_midpoints(M), Rin(M))
+    L_bol = Lsum(M, Acc, R_midpoints(M), Rin(M))
+    AcEddList = Acc/AccR_Edd(M)
 
     maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
     maskXray = (freq >= 1e16) & (freq <= 1e19)
 
-    LVis = scipy.integrate.trapezoid(L_tot[maskVis], freq[maskVis])
-    LXray = scipy.integrate.trapezoid(L_tot[maskXray], freq[maskXray])
+    LVis = scipy.integrate.trapezoid(L_bol[maskVis], freq[maskVis])
+    LXray = scipy.integrate.trapezoid(L_bol[maskXray], freq[maskXray])
 
-    #mBolematrix[i, j] = scipy.integrate.trapezoid(L_tot, freq)
+    #mBolematrix[i, j] = scipy.integrate.trapezoid(L_bol, freq)
     #mVismatrix[i, j] = LVis
     #mXraymatrix[i, j] = LXray
     mVisXray[i, j] = LVis / LXray if LXray > 0 else np.nan
 
 
 
-MassGrid, AccGrid = np.meshgrid(MassList, AccList/AccR_Edd(MassList), indexing='ij')
+MassGrid, AccGrid = np.meshgrid(MassList, AccList'''/AcEddList''', indexing='ij')
+MassGrid2, LumGrid = np.meshgrid(MassList, L_bol, indexing='ij')
 
 #Bol = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mBolematrix.ravel())).T
 #Vis = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVismatrix.ravel())).T
 #Xray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mXraymatrix.ravel())).T
 VisXray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
+#MassBol = np.vstack((MassGrid2.ravel(), LumGrid.ravel(), mVisXray.ravel())).T
 
 #h = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
 
@@ -1065,6 +1069,7 @@ ax = fig.add_subplot(111, projection='3d')
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mVismatrix), cmap='viridis')
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mXraymatrix), cmap='viridis')
 ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mVisXray), cmap='viridis')
+#ax.plot_surface(np.log10(MassGrid2/const.M_sun.to_value()), np.log10(LumGrid), np.log10(mVisXray), cmap='viridis') #Mass, Bolometric, visible/x-ray luminosity
 
 #ax.set_zlim(20, 40)
 
