@@ -1,89 +1,3 @@
-#########Jackknife##########
-
-JKx, JKy, JKP = astats.jackknife_resampling(x_data), astats.jackknife_resampling(y_data), astats.jackknife_resampling(Time_mins)
-
-def Period(Position, initial_values):
-    f = astats.jackknife_resampling(Position)
-    
-    for i in range(len(JKP)):
-        def T(Position):
-            popt, _ = opt.curve_fit(model, JKP[i]/(24 * 60), f[i], sigma=10000, 
-                                absolute_sigma=True, p0=initial_values, check_finite=True, maxfev=50000)
-            return popt[1]
-        estimate, bias, stderr, conf_interval = astats.jackknife_stats(Position, T, 0.95)
-        
-        return estimate, bias, stderr, conf_interval
-
-#print(Period(x_data, initial_valuesx)) 
-#print(Period(y_data, initial_valuesy))
-#print(popt[1])
-
-#Specifically for x (gives different value of Period than the function, but the same bias and stderr)
-for i in range(len(JKP)):
-    def Period2(Position):
-        popt, _ = opt.curve_fit(model, JKP[i]/(24 * 60), JKx[i], sigma=10000, 
-                                absolute_sigma=True, p0=initial_valuesx, check_finite=True, maxfev=50000)
-        return popt[1]
-    
-    estimate, bias, stderr, conf_interval = astats.jackknife_stats(x_data, Period2, 0.95)
-
-#print('Jackknife Estimate = ', estimate)
-#print('Bias = ', bias)
-#print('Standard Error = ', stderr)
-#print('Confidence Interval = ', conf_interval)
-
-###########################
-
-
-
-
-#########Boosstrap##########
-
-import numpy as np
-from itertools import combinations, permutations, product
-from collections.abc import Sequence
-from dataclasses import dataclass, field
-import inspect
-
-from scipy._lib._util import (rng_integers)
-#from scipy._lib._array_api import array_namespace, is_numpy, xp_moveaxis_to_end
-#from scipy.special import ndtr, ndtri, comb, factorial
-
-
-
-#gives a random sample of data points 
-def bootstrap_resample(sample, n_resamples=None, rng=None):
-    """Bootstrap resample the sample."""
-    n = sample.shape[-1]
-
-    i = rng_integers(rng, 0, n, (n_resamples, n))
-
-    resamples = sample[..., i]
-    return resamples
-
-
-#def bootstrap(data, statistic, n_resamples):
-#    for i in range(len(data)):
-
-
-
-
-#t = scipy.stats.bootstrap(datas, opt.curve_fit(model,Time_mins/(24*60), x_data, sigma = 10000, absolute_sigma=True, p0=initial_valuesx, check_finite=True, maxfev=50000), n_resamples=9999, batch=None, vectorized=None, paired=False, 
-#                          axis=0, confidence_level=0.95, alternative='two-sided', method='BCa', bootstrap_result=None)
-
-#print(t)
-
-
-
-plt.plot(Time_mins/(24*60), x_data, 'o', label = 'Data')
-plt.plot(smooth_time, model(smooth_time, *popt), label = 'Fit')
-plt.show()
-
-
-
-
-
-
 #how far away can you see balck hole as function of accretion rate?????
 #set black hole at a distance then look at received flux ^^^
 #flux vs distance for observable BHs
@@ -410,12 +324,13 @@ def Area(Radius):
 
 #for none scaled units (radius)
 def Temp2(M, Ar, Radius, Rin):
-  a = (3 * const.G.to_value()* M * Ar)
-  b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
-  c = ( Rin / Radius )**(1/2)
-  T = ((a / b) * (1 - c))**(1/4)
-  return T
-#print(Temp2(MassBH, AccR, R_midpoints, Rin))
+    a = (3 * const.G.to_value() * M * Ar)
+    b = (8 * np.pi * const.sigma_sb.to_value() * Radius**3)
+    c = (Rin / Radius)**0.5
+
+    T = ((a / b) * (1 - c))**0.25
+    return T
+print(Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)).shape)
 
 
 
@@ -446,10 +361,10 @@ def Temp3(M, Ar, Radius, Rs):
 
 
 
-#T2 = Temp2(MassBH, AccR, R_midpoints, Rin)
+#T2 = Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH))
 #T3 = Temp3(MassBH, AccR, R_midpoints)
 
-#print(T2[5000], T3[5000])
+#print(T2.shape)
 
 
 
@@ -480,15 +395,36 @@ plt.show()
 #Blackbody flux not using built in function
 def Flux(T):
    temps = T.reshape(-1, 1)
+   tem = np.maximum(temps, 1e-10)
    freqs = freq.reshape(1, -1)
    a = (2 * np.pi *const.h.to_value() * freqs**3)/(const.c.to_value()**2)
-   b = (const.h.to_value() * freqs)/(const.k_B.to_value() * temps)
+   b = (const.h.to_value() * freqs)/(const.k_B.to_value() * tem) 
    #b = b.astype(np.float32)
    #b = np.clip(b, -100, 100)
    c = np.exp(b)
    Fv = a/(c-1)
    return Fv
 
+'''
+def Flux(T):
+    temps = np.maximum(T, 1e-10)  # Prevent division by zero
+    a = (2 * np.pi * const.h.to_value() * freq**3) / (const.c.to_value()**2)
+
+    chunk_size = 100  # Process in batches to avoid memory errors
+    Fv = np.zeros((T.shape[0], len(freq)))  # Preallocate output array
+    
+    for i in range(0, T.shape[0], chunk_size):
+        temp_chunk = temps[i:i+chunk_size]  # Get a batch
+        temp_chunk = temp_chunk.reshape(-1, 1)  # Ensure correct shape for broadcasting
+
+        b = (const.h.to_value() * freq) / (const.k_B.to_value() * temp_chunk)
+        #b = np.clip(b, -100, 100)  # Prevent overflow
+        c = np.exp(b)
+        
+        Fv[i:i+chunk_size, :] = a / (c - 1)
+
+    return Fv
+'''
 
 
   
@@ -895,30 +831,35 @@ for M in MassList:
 
 VisibleF = (np.logspace(np.log10(420), np.log10(564), 1000)/10e9)*const.c.to_value()
 XrayF = (np.logspace(np.log10(1), np.log10(100), 1000)/10e12)*const.c.to_value()
-MassList = np.logspace(3, 10, 50) * const.M_sun.to_value() 
+MassList = np.logspace(3, 10, 20) * const.M_sun.to_value() 
 Mass = 10**8*const.M_sun.to_value()
-Ar = 10**15
-AccList = np.logspace(np.log10(10e7), np.log10(10e30/5), 50)
+Ar = 10**17
+AccList = np.logspace(np.log10(10e7), np.log10(10e25/5), 20)
 
 ############################ 2D cases ############################
 '''
 ################## Changing mass ################## 
 
 MmBol = np.empty(len(MassList))
+MmBol_Edd = np.empty(len(MassList))
+MmBol_solar = np.empty(len(MassList))
 MmVis= np.zeros(len(MassList)) 
 MmXray = np.zeros(len(MassList))
 MmVX = np.zeros(len(MassList))
 
 for i, M in enumerate(MassList):
     LBol = Lsum(M, Ar, R_midpoints(M), Rin(M))  
+    MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
+    MmBol_Edd[i] = MmBol[i]/L_edd(M)
+    MmBol_solar[i] = MmBol[i]/const.L_sun.to_value()
+
     maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
     maskXray = (freq >= 1e16) & (freq <= 1e19)
 
     LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
     LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
 
-    MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
-    MmVis[i] = LVis     
+    MmVis[i] = LVis 
     MmXray[i] = LXray
     MmVX[i] = LVis/LXray if LXray > 0 else np.nan
     
@@ -933,6 +874,8 @@ mLVXmatrix = np.vstack((MassList, MmVX)).T
 ################## Changing accretion rate ##################
 
 AmBol = np.empty(len(AccList))
+AmBol_solar = np.empty(len(AccList))
+AmBol_Edd = np.empty(len(AccList))
 AmVis= np.zeros(len(AccList)) 
 AmXray = np.zeros(len(AccList))
 AmVX = np.zeros(len(AccList))
@@ -940,6 +883,9 @@ AmVX = np.zeros(len(AccList))
 for j, Acc in enumerate(AccList):
   LBol = Lsum(Mass, Acc, R_midpoints(Mass), Rin(Mass))
   AmBol[j] = scipy.integrate.trapezoid(LBol, freq)
+  AmBol_Edd[j] = AmBol[j]/L_edd(Mass)
+  AmBol_solar[j] = AmBol[j]/const.L_sun.to_value()
+
   maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
   maskXray = (freq >= 1e16) & (freq <= 1e19)
 
@@ -960,20 +906,21 @@ aLVXmatrix = np.vstack((AccList, AmVX)).T
 plt.figure(figsize=(8, 6))
 #plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVis), linestyle='-', label='Visible')
 #plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmXray), linestyle='-', label='X-ray')
-#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmBol), linestyle='-', label='Total Luminosity')
-plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVX), linestyle='-', label='Visible/X-ray')
+plt.plot(np.log10(AccList/const.M_sun.to_value()), np.log10(AmBol_solar), linestyle='-', label='Total Luminosity')
+#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVX), linestyle='-', label='Visible/X-ray')
 plt.xlabel("Log(Accretion Rate) [M☉/s]")
-plt.ylabel("Log(Luminosity) ")
+plt.ylabel("Log(Luminosity/Solar Luminosity) ")
 plt.legend()
+
 
 
 plt.figure(figsize=(8, 6))
 #plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVis), linestyle='-', label='Visible')
 #plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmXray), linestyle='-', label='X-ray')
-#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmBol), linestyle='-', label='Total Luminosity')
-plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX), linestyle='-', label='Visible/X-ray')
+plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmBol_solar), linestyle='-', label='Total Luminosity')
+#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX), linestyle='-', label='Visible/X-ray')
 plt.xlabel("Log(Mass) [M☉]")
-plt.ylabel("Log(Luminosity) ")
+plt.ylabel("Log(Luminosity/Solar Luminosity) ")
 plt.legend()
 plt.show()
 '''
@@ -1020,33 +967,44 @@ mVismatrix = np.zeros((len(MassList), len(AccList)))
 mXraymatrix = np.zeros((len(MassList), len(AccList)))
 mVisXray = np.zeros((len(MassList), len(AccList)))
 
-
 for i, M in enumerate(MassList):
   for j, Acc in enumerate(AccList):
-    L_bol = Lsum(M, Acc, R_midpoints(M), Rin(M))
-    AcEddList = Acc/AccR_Edd(M)
+    L_tot = Lsum(M, Acc, R_midpoints(M), Rin(M))
 
     maskVis = (freq >= 4.3e14) & (freq <= 7.5e14)
     maskXray = (freq >= 1e16) & (freq <= 1e19)
 
-    LVis = scipy.integrate.trapezoid(L_bol[maskVis], freq[maskVis])
-    LXray = scipy.integrate.trapezoid(L_bol[maskXray], freq[maskXray])
+    LVis = scipy.integrate.trapezoid(L_tot[maskVis], freq[maskVis])
+    LXray = scipy.integrate.trapezoid(L_tot[maskXray], freq[maskXray])
 
-    #mBolematrix[i, j] = scipy.integrate.trapezoid(L_bol, freq)
+    #mBolematrix[i, j] = scipy.integrate.trapezoid(L_tot, freq)
     #mVismatrix[i, j] = LVis
     #mXraymatrix[i, j] = LXray
     mVisXray[i, j] = LVis / LXray if LXray > 0 else np.nan
 
 
 
-MassGrid, AccGrid = np.meshgrid(MassList, AccList'''/AcEddList''', indexing='ij')
-MassGrid2, LumGrid = np.meshgrid(MassList, L_bol, indexing='ij')
+MassGrid, AccGrid = np.meshgrid(MassList, AccList, indexing='ij')
+
+AccGridEdd = AccGrid/AccR_Edd(MassGrid)
+AccGridSolar = (AccGrid/const.M_sun.to_value())*24*60*60*365.25
+
+#print(AccR_Edd(MassGrid))
+#for M in MassGrid:
+#  L_Bol = Lsum(M, AccGrid, R_midpoints(M), Rin(M))
+
+#L_Bol = Lsum(MassGrid, Ar, R_midpoints(MassGrid), Rin(MassGrid))
+
+
+#print(L_Bol)
+
 
 #Bol = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mBolematrix.ravel())).T
 #Vis = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVismatrix.ravel())).T
 #Xray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mXraymatrix.ravel())).T
-VisXray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
-#MassBol = np.vstack((MassGrid2.ravel(), LumGrid.ravel(), mVisXray.ravel())).T
+VisXray = np.vstack((MassGrid.ravel(), AccGridEdd.ravel(), mVisXray.ravel())).T
+#LBols = np.vstack((MassGrid.ravel(), AccGrid.ravel(), L_Bol.ravel())).T
+
 
 #h = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
 
@@ -1059,8 +1017,14 @@ VisXray = np.vstack((MassGrid.ravel(), AccGrid.ravel(), mVisXray.ravel())).T
 #for mass, acc, visxray in Xray:
 #  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
 
-for mass, acc, visxray in VisXray:
-  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
+#for mass, acc, visxray in VisXray:
+#  print(f"{mass:.2e}   |   {acc:.2e}   |   {visxray:.2e}")
+
+
+small_value = 1e-30
+mVisXray_safe = np.maximum(mVisXray, small_value)  # Avoid log10(0)
+mVisXray_safe = np.minimum(mVisXray_safe, 10e150)
+
 
 # 3D Plot 
 fig = plt.figure(figsize=(12, 9))
@@ -1068,14 +1032,17 @@ ax = fig.add_subplot(111, projection='3d')
 #ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mBolematrix))
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mVismatrix), cmap='viridis')
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mXraymatrix), cmap='viridis')
-ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mVisXray), cmap='viridis')
-#ax.plot_surface(np.log10(MassGrid2/const.M_sun.to_value()), np.log10(LumGrid), np.log10(mVisXray), cmap='viridis') #Mass, Bolometric, visible/x-ray luminosity
+ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray_safe), cmap='viridis')
 
-#ax.set_zlim(20, 40)
+#fig = plt.figure(figsize=(12, 9))
+#ax = fig.add_subplot(111, projection='3d')
+#ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(L_tot), np.log10(mVisXray), cmap='viridis')
 
-ax.set_xlabel('log10(Mass)')
-ax.set_zlabel('log10(Luminosity )')
-ax.set_ylabel('log10(Accretion Rate)')
+#ax.set_zlim(0, 200)
+
+ax.set_xlabel('log10(Mass) [M☉]')
+ax.set_zlabel('log10(Luminosity [visible/x-ray])')
+ax.set_ylabel('log10(Accretion Rate) [M☉/yr]')
 plt.show()
 
 ########################################################################################
