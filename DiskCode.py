@@ -28,7 +28,7 @@ from scipy import integrate
 from astropy.cosmology import WMAP9 as cosmo
 from astropy.io.votable import parse
 import pandas as pd
-from astroquery.simbad import Simbad
+#from astroquery.simbad import Simbad
 import scipy.integrate
 
 #def votable_to_pandas(votable_file):
@@ -216,8 +216,8 @@ print("M4:", M4)
 
 
 
-MassSMBH1 =  10**7 * const.M_sun.to_value()
-MassSMBH2 =  10**9 * const.M_sun.to_value()
+MassSMBH1 =  10**4 * const.M_sun.to_value()
+MassSMBH2 =  10**8 * const.M_sun.to_value()
 MassSMBH3 =  10**11 * const.M_sun.to_value()
 MassBH =  10 * const.M_sun.to_value()  #Mass of Black hole
 Mass2 = 100 * const.M_sun.to_value()
@@ -227,7 +227,7 @@ Mr2 = 10**14 #*u.kg/(u.s*u.m**3)
 
 #print((AccR/const.M_sun.to_value())*365.25*24*60*60)
 
-Fstart = 10
+Fstart = 0.01
 Fstop = 30
 Fsteps = 1000
 freq = np.logspace(Fstart, Fstop, Fsteps) #* u.Hz #Range of frequencies
@@ -962,11 +962,12 @@ plt.legend()
 #plt.show()
 '''
 
+'''
 plt.figure(figsize=(8, 6))
 plt.plot(np.log10(AccList/const.M_sun.to_value()), np.log10(AmHB_OIII), linestyle='-', label='Halpha')
 plt.xlabel("Log(Accretion Rate) [M☉/s]")
 plt.ylabel("Log(Luminosity ratio) ")
-
+'''
 
 
 
@@ -996,6 +997,10 @@ for mass, lum in mLBolmatrix:
 '''
 
 ########################################################################################
+
+
+
+
 
 
 
@@ -1123,7 +1128,7 @@ plt.ylabel('Log(L Optical)')
 
 
 
-
+'''
 #Milestone values
 LumMilestone = (Flux(Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)))) * Area(R_midpoints(MassBH))  
 LumMilestonesum = np.sum(LumMilestone, axis = 0)
@@ -1155,9 +1160,9 @@ Ar = 10**17
 
 LvissM = np.zeros(len(MassList2))
 LvissA = np.zeros(len(AccList2))
+'''
 
-
-
+'''
 
 fig, ax1 = plt.subplots()
 fig.set_size_inches(10, 6)
@@ -1188,7 +1193,34 @@ for j, A in enumerate(AccList2):
 
 ax1.plot(np.log10(AccList2/AccR_Edd(Mass)), np.log10(LvissA), linestyle='-', label=f"Acc = {j:.1e} M☉/s")
 
+'''
 
+LumDAcc1sum = Lsum(MassBH, 0.0001*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
+LumDAcc2sum = Lsum(MassBH, 0.1*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
+LumMilestonesum = Lsum(MassBH, 0.0000001*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
+LumSMBH1sum = Lsum(MassSMBH1, 0.0000001*AccR_Edd(MassBH), R_midpoints(MassSMBH1), Rin(MassSMBH1))
+LumSMBH2sum = Lsum(MassSMBH2, 0.0000001*AccR_Edd(MassBH), R_midpoints(MassSMBH2), Rin(MassSMBH2))
+
+
+
+
+
+
+
+
+
+em_spectrum = {
+    'Radio': (1e6 / 1e9, 3e9 / 1e9),
+    'Microwave': (3e9 / 1e9, 3e11 / 1e9),
+    'Infrared': (3e11 / 1e9, 4e14 / 1e9),
+    'Optical': (4e14 / 1e9, 7.5e14 / 1e9),
+    'Ultraviolet': (7.5e14 / 1e9, 3e16 / 1e9),
+    'X-ray': (3e16 / 1e9, 3e19 / 1e9),
+    'Gamma-ray': (3e19 / 1e9, 3e24 / 1e9)
+}
+
+gulp = 0.0001*AccR_Edd(MassBH)
+print(gulp)
 
 
 
@@ -1200,14 +1232,18 @@ fig.set_size_inches(10, 6)
 #fig.patch.set_facecolor('#D5D5D5') 
 #ax1.set_facecolor('#D5D5D5') 
 
-ax1.set_xlim(7, 20)
-ax1.set_ylim(15, 35)
+ax1.set_xlim(-2, 9)
+ax1.set_ylim(9, 32)
 
-d, = ax1.plot(np.log10(freq), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label='10')
+d, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label=r'Mass=10$M_{\odot}$, AccR=10$^{-7}$$\dot{M}$$_{Edd}$') #5x10$^{-15}$$M_{\odot}$Yr$^{-1}$')
 #e, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), linestyle='-', color='purple', label='Eddington Limit (10)')
-a, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH1sum), linestyle='-', color='green', label='10^7')
-b, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH2sum), linestyle='-', color='blue', label='10^9')
-c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color='red', label='10^11')
+a, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH1sum), linestyle='--', color='red', label=r'Increaing Mass +10$^4$$M_{\odot}$')
+b, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH2sum), linestyle='--', color='red')#, label='10^8')
+h, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc1sum), linestyle=':', color='blue', label=r'Increasing Accretion Rate +10$^{-3}$$\dot{M}$$_{Edd}$')
+i, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc2sum), linestyle=':', color='blue')#, label='') 
+
+
+#c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color='red', label='10^11')
 #f, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2um), linestyle='-', color='brown', label='10^4')
 #g, = ax1.plot(np.log10(freq), np.log10(Lsum4(MassBH, AccR, r(MassBH), rin(MassBH))), linestyle='-', color='orange', label='scaled')
 
@@ -1216,20 +1252,35 @@ c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color
 #dAccrSpin, = ax1.plot(np.log10(freq), np.log10(freq * LumSunMass2umSpin), linestyle=':', color='green')
 
 
-no_spin_line = plt.Line2D([0], [0], color='black', linestyle='-', label='No Spin')
-max_spin_line = plt.Line2D([0], [0], color='black', linestyle=':', label='Max Spin')
-max_spin_line2 = plt.Line2D([0], [0], color='red', linestyle='--', label='SMBH')
+
+original = plt.Line2D([0], [0], color='black', linestyle='-', label=r'Mass=10$M_{\odot}$, AccR=10$^{15}$$M_{\odot}$')
+mass = plt.Line2D([0], [0], color='red', linestyle='--', label=r'Increasing Mass +10$^4$$M_{\odot}$')
+accretion = plt.Line2D([0], [0], color='blue', linestyle=':', label=r'Increasing Accretion Rate +10$^{15}$$M_{\odot}$')
 mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$')
-mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$')
-ax1.legend(handles=[no_spin_line, max_spin_line, mass_10msun, mass_1msun, max_spin_line2], fontsize=12)
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$'),
+
+ax1.legend(handles=[d, a, h], fontsize=12, loc='upper right')
+
+colors = {
+    'Radio': 'lightblue',
+    'Microwave': 'lightgreen',
+    'Infrared': 'lightcoral',
+    'Optical': 'lightyellow',
+    'Ultraviolet': 'lightpink',
+    'X-ray': 'lightgray',
+    'Gamma-ray': 'lightcyan'
+}
+
+for band, (start, end) in em_spectrum.items():
+    ax1.axvspan(np.log10(start), np.log10(end), color=colors[band], alpha=0.3)
 
 
 
-ax1.set_ylabel(r'$\log_{10}(νL_ν)$ W', fontsize=16)
-ax1.set_xlabel(r'$\log_{10}(ν)$ Hz', fontsize=16)
+ax1.set_ylabel(r"$\log_{10}(\nu L_\nu)$ (W)", fontsize=16)
+ax1.set_xlabel(r'$\log_{10}(\nu)$ (GHz)', fontsize=16)
 ax1.tick_params(axis='x', labelsize=14)
 ax1.tick_params(axis='y', labelsize=14)
-ax1.legend(fontsize=12)
+ax1.legend(fontsize=14, loc='upper left')
 
 # Create a secondary x-axis
 ax2 = ax1.twiny()
@@ -1237,7 +1288,7 @@ ax2 = ax1.twiny()
 freq_ticks = ax1.get_xticks()
 
 # Convert frequency ticks to wavelength ticks
-wavelength_ticks = np.log10(const.c.value / (10**freq_ticks))
+wavelength_ticks = np.log10(3*(const.c.value / (10**freq_ticks)))
 
 # Create custom labels
 custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_ticks]
@@ -1246,19 +1297,18 @@ custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_tic
 ax2.set_xlim(ax1.get_xlim())
 ax2.set_xticks(freq_ticks)
 ax2.set_xticklabels(custom_labels)
-ax2.set_xlabel(r'$\log_{10}(\lambda/3)$ m', fontsize=16)
+ax2.set_xlabel(r'$\log_{10}(\lambda)$ m', fontsize=16)
 ax2.tick_params(axis='x', labelsize=14)
 
 peak_indices = {
     'MileStone': np.argmax(LumSMBH1sum),
     'MaxSpin': np.argmax(LumSMBH2sum),
-    'NonVisous': np.argmax(LumSMBH3sum),
     
 }
 
 peak_frequencies = {key: freq[idx] for key, idx in peak_indices.items()}
 peak_y_values = {key: np.log10(freq[peak_indices[key]] * value[peak_indices[key]]) for key, value in zip(peak_indices.keys(),
-[LumSMBH1sum, LumSMBH2sum, LumSMBH3sum])}
+[LumSMBH1sum, LumSMBH2sum])}
 
 
 print("Peak frequencies (Hz) and corresponding Luminosities (W):")
@@ -2795,4 +2845,3 @@ def ACCR(dist):
 #Can we find anything about the early universe and the first formed galaxies????
 #AGN accretion rate??
 #
-
