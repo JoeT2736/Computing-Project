@@ -30,6 +30,11 @@ from astropy.io.votable import parse
 import pandas as pd
 #from astroquery.simbad import Simbad
 import scipy.integrate
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import MultipleLocator
+from scipy.stats import gaussian_kde
+from matplotlib import rc
+import sys
 
 #def votable_to_pandas(votable_file):
  #   votable = parse(votable_file)
@@ -332,7 +337,6 @@ def Temp2(M, Ar, Radius, Rin):
 
     T = ((a / b) * (1 - c))**0.25
     return T
-print(Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)).shape)
 
 
 
@@ -370,26 +374,36 @@ def Temp3(M, Ar, Radius, Rs):
 
 
 
+
+
+Akkr = 1e-8*const.M_sun.to_value()/(365.25*24*60*60)
+Akkr2 = 1e-7*const.M_sun.to_value()/(365.25*24*60*60)
+
 #GOOD TEMPERATURE PLOT MIGHT NEED THIS
-'''
-fig, ax1 = plt.subplots()
-fig.set_size_inches(10, 8)
+
+#fig, ax1 = plt.subplots()
+plt.figure(figsize=(8, 6))
 
 #fig.patch.set_facecolor('#D5D5D5') 
 #ax1.set_facecolor('#D5D5D5') 
 
 #print((Rin(MassBH) + R_midpoints(MassBH))/1000)
 
-ax1.plot((Rin(MassBH) + R_midpoints(MassBH))/1000, Temp2(MassBH, AccR, R_midpoints(MassBH), Rin(MassBH)), color = 'blue', label = 'Viscous')
-ax1.plot((Rin(MassBH) + R_midpoints(MassBH))/1000, Temp2(MassBH, AccR2, R_midpoints(MassBH), Rin(MassBH)), color = 'red', linestyle = ':')
-ax1.plot((Rin(Mass2) + R_midpoints(Mass2))/1000, Temp2(Mass2, AccR, R_midpoints(Mass2), Rin(Mass2)), color = 'blue', linestyle = '--')
-ax1.set_xlim(-0.03e4, 0.007e6)
-ax1.set_ylabel('Temperature (K)', fontsize=20)
-ax1.set_xlabel('Distance from centre of Black hole (km)', fontsize=20)
-ax1.tick_params(axis='x', labelsize=16)
-ax1.tick_params(axis='y', labelsize=16)
-#ax1.legend(fontsize=16)
-'''
+plt.plot((Rin(MassBH) + R_midpoints(MassBH))/1000, Temp2(MassBH, Akkr, R_midpoints(MassBH), Rin(MassBH))/1e6, color = 'black', 
+         label = 'Mass=10$M_{\odot}$, AccR=10$^{-8}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.plot((Rin(MassBH) + R_midpoints(MassBH))/1000, Temp2(MassBH, Akkr2, R_midpoints(MassBH), Rin(MassBH))/1e6, color = 'blue', linestyle = ':',
+         label = 'Mass=10$M_{\odot}$, AccR=10$^{-8}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.plot((Rin(Mass2) + R_midpoints(Mass2))/1000, Temp2(Mass2, Akkr, R_midpoints(Mass2), Rin(Mass2))/1e6, color = 'red', linestyle = '--',
+         label = 'Mass=100$M_{\odot}$, AccR=10$^{-7}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.xlim(-0.003e4, 0.007e6)
+plt.ylabel('Temperature (MK)', fontsize=18)
+plt.xlabel('Distance from centre of Black hole (km)', fontsize=18)
+plt.tick_params(axis='both', which='major', labelsize=16, length=7, width=2, top=True, right=True) 
+plt.tick_params(axis='both', which='minor', labelsize=10, length=4, width=1.5, top=True, right=True) 
+plt.legend(fontsize=16, frameon=True, loc='best')
+plt.minorticks_on()
+plt.tight_layout()
+plt.savefig('Temperature', dpi=300, bbox_inches='tight')
 
 
 
@@ -838,14 +852,16 @@ for M in MassList:
 
 
 
-
-
 VisibleF = (np.logspace(np.log10(420), np.log10(564), 1000)/10e9)*const.c.to_value()
 XrayF = (np.logspace(np.log10(1), np.log10(100), 1000)/10e12)*const.c.to_value()
-MassList = np.logspace(3, 10, 20) * const.M_sun.to_value() 
-Mass = 10**8*const.M_sun.to_value()
-Ar = 10**17
-AccList = np.logspace(np.log10(10e7), np.log10(10e25/5), 20)
+MassList = np.logspace(3, 8, 100) * const.M_sun.to_value() 
+Mass = 10*const.M_sun.to_value()
+Mass2 = 100*const.M_sun.to_value()
+Mass3 = 5*const.M_sun.to_value()
+Ar = 1e-8*const.M_sun.to_value()/(365.25*24*60*60)
+Ar2 = 1e-7*const.M_sun.to_value()/(365.25*24*60*60)
+Ar3 = 1e-9*const.M_sun.to_value()/(365.25*24*60*60)
+AccList = np.logspace(np.log10(1e4), np.log10(1e18), 100)
 Halpha = const.c.to_value()*656.3e-9
 Hbeta = const.c.to_value()*486.1e-9
 OIII = const.c.to_value()*500.7e-9
@@ -854,19 +870,31 @@ HeII = const.c.to_value()*468.6e-9
 
 
 ############################ 2D cases ############################
-
+'''
 ################## Changing mass ################## 
 
 MmBol = np.empty(len(MassList))
+MmBol2 = np.empty(len(MassList))
+MmBol3 = np.empty(len(MassList))
 MmBol_Edd = np.empty(len(MassList))
 MmBol_solar = np.empty(len(MassList))
 MmVis= np.zeros(len(MassList)) 
+MmVis2= np.zeros(len(MassList))
+MmVis3= np.zeros(len(MassList))
 MmXray = np.zeros(len(MassList))
+MmXray2 = np.zeros(len(MassList))
+MmXray3 = np.zeros(len(MassList))
 MmVX = np.zeros(len(MassList))
+MmVX2 = np.zeros(len(MassList))
+MmVX3 = np.zeros(len(MassList))
 
 for i, M in enumerate(MassList):
     LBol = Lsum(M, Ar, R_midpoints(M), Rin(M))  
+    LBol2 = Lsum(M, Ar2, R_midpoints(M), Rin(M))
+    LBol3 = Lsum(M, Ar3, R_midpoints(M), Rin(M))
     MmBol[i] = scipy.integrate.trapezoid(LBol, freq)
+    MmBol2[i] = scipy.integrate.trapezoid(LBol2, freq)
+    MmBol3[i] = scipy.integrate.trapezoid(LBol3, freq)
     MmBol_Edd[i] = MmBol[i]/L_edd(M)
     MmBol_solar[i] = MmBol[i]/const.L_sun.to_value()
 
@@ -874,7 +902,11 @@ for i, M in enumerate(MassList):
     maskXray = (freq >= 1e16) & (freq <= 1e19)
 
     LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
+    LVis2 = scipy.integrate.trapezoid(LBol2[maskVis], freq[maskVis])
+    LVis3 = scipy.integrate.trapezoid(LBol3[maskVis], freq[maskVis])
     LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
+    LXray2 = scipy.integrate.trapezoid(LBol2[maskXray], freq[maskXray])
+    LXray3 = scipy.integrate.trapezoid(LBol3[maskXray], freq[maskXray])
     LHalpha = scipy.integrate.trapezoid(LBol[(freq >= Halpha - 10e-9) & (freq <= Halpha + 10e-9)], freq[(freq >= Halpha - 10e-9) & (freq <= Halpha + 10e-9)])
     LHbeta = scipy.integrate.trapezoid(LBol[(freq >= Hbeta - 10e-9) & (freq <= Hbeta + 10e-9)], freq[(freq >= Hbeta - 10e-9) & (freq <= Hbeta + 10e-9)])
     LOIII = scipy.integrate.trapezoid(LBol[(freq >= OIII - 10e-9) & (freq <= OIII + 10e-9)], freq[(freq >= OIII - 10e-9) & (freq <= OIII + 10e-9)])
@@ -883,8 +915,14 @@ for i, M in enumerate(MassList):
     MmVis[i] = LVis 
     MmXray[i] = LXray
     MmVX[i] = LVis/LXray if LXray > 0 else np.nan
+    MmVis2[i] = LVis2
+    MmXray2[i] = LXray2
+    MmVX2[i] = LVis2/LXray2 if LXray2 > 0 else np.nan
+    MmVis3[i] = LVis3
+    MmXray3[i] = LXray3
+    MmVX3[i] = LVis3/LXray3 if LXray3 > 0 else np.nan
 
-    
+
 mLBolmatrix = np.vstack((MassList, MmBol)).T
 mLVismatrix = np.vstack((MassList, MmVis)).T
 mLXraymatrix = np.vstack((MassList, MmXray)).T
@@ -896,20 +934,35 @@ mLVXmatrix = np.vstack((MassList, MmVX)).T
 ################## Changing accretion rate ##################
 
 AmBol = np.empty(len(AccList))
+AmBol2 = np.empty(len(AccList))
+AmBol3 = np.empty(len(AccList))
 AmBol_solar = np.empty(len(AccList))
 AmBol_Edd = np.empty(len(AccList))
 AmVis= np.zeros(len(AccList)) 
+AmVis2= np.zeros(len(AccList))
+AmVis3= np.zeros(len(AccList))
 AmXray = np.zeros(len(AccList))
+AmXray2 = np.zeros(len(AccList))
+AmXray3 = np.zeros(len(AccList))
 AmVX = np.zeros(len(AccList))
+AmVX2 = np.zeros(len(AccList))
+AmVX3 = np.zeros(len(AccList))
+
+
 AmHalpha = np.zeros(len(AccList))
 AmHbeta = np.zeros(len(AccList))
 AmOIII = np.zeros(len(AccList))
 AmHeII = np.zeros(len(AccList))
 AmHB_OIII = np.zeros(len(AccList))
 
+
 for j, Acc in enumerate(AccList):
   LBol = Lsum(Mass, Acc, R_midpoints(Mass), Rin(Mass))
+  LBol2 = Lsum(Mass2, Acc, R_midpoints(Mass), Rin(Mass))
+  LBol3 = Lsum(Mass3, Acc, R_midpoints(Mass), Rin(Mass))
   AmBol[j] = scipy.integrate.trapezoid(LBol, freq)
+  AmBol2[j] = scipy.integrate.trapezoid(LBol2, freq)
+  AmBol3[j] = scipy.integrate.trapezoid(LBol3, freq)
   AmBol_Edd[j] = AmBol[j]/L_edd(Mass)
   AmBol_solar[j] = AmBol[j]/const.L_sun.to_value()
 
@@ -917,7 +970,11 @@ for j, Acc in enumerate(AccList):
   maskXray = (freq >= 1e16) & (freq <= 1e19)
 
   LVis = scipy.integrate.trapezoid(LBol[maskVis], freq[maskVis])
+  LVis2 = scipy.integrate.trapezoid(LBol2[maskVis], freq[maskVis])
+  LVis3 = scipy.integrate.trapezoid(LBol3[maskVis], freq[maskVis])
   LXray = scipy.integrate.trapezoid(LBol[maskXray], freq[maskXray])
+  LXray2 = scipy.integrate.trapezoid(LBol2[maskXray], freq[maskXray])
+  LXray3 = scipy.integrate.trapezoid(LBol3[maskXray], freq[maskXray])
   LHalpha = scipy.integrate.trapezoid(LBol[(freq >= Halpha - 10e-9) & (freq <= Halpha + 10e-9)], freq[(freq >= Halpha - 10e-9) & (freq <= Halpha + 10e-9)])
   LHbeta = scipy.integrate.trapezoid(LBol[(freq >= Hbeta - 10e-9) & (freq <= Hbeta + 10e-9)], freq[(freq >= Hbeta - 10e-9) & (freq <= Hbeta + 10e-9)])
   LOIII = scipy.integrate.trapezoid(LBol[(freq >= OIII - 10e-9) & (freq <= OIII + 10e-9)], freq[(freq >= OIII - 10e-9) & (freq <= OIII + 10e-9)])
@@ -926,6 +983,12 @@ for j, Acc in enumerate(AccList):
   AmVis[j] = LVis 
   AmXray[j] = LXray
   AmVX[j] = LVis/LXray if LXray > 0 else np.nan
+  AmVis2[j] = LVis2
+  AmXray2[j] = LXray2
+  AmVX2[j] = LVis2/LXray2 if LXray2 > 0 else np.nan
+  AmVis3[j] = LVis3
+  AmXray3[j] = LXray3
+  AmVX3[j] = LVis3/LXray3 if LXray3 > 0 else np.nan
   AmHalpha[j] = LHalpha
   AmHbeta[j] = LHbeta
   AmOIII[j] = LOIII
@@ -939,35 +1002,48 @@ aLXraymatrix = np.vstack((AccList, AmXray)).T
 aLVXmatrix = np.vstack((AccList, AmVX)).T
 
 ###########################################################
-'''
+
+
 plt.figure(figsize=(8, 6))
 #plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVis), linestyle='-', label='Visible')
 #plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmXray), linestyle='-', label='X-ray')
-plt.plot(np.log10(AccList/const.M_sun.to_value()), np.log10(AmBol_solar), linestyle='-', label='Total Luminosity')
-#plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVX), linestyle='-', label='Visible/X-ray')
-plt.xlabel("Log(Accretion Rate) [M☉/s]")
-plt.ylabel("Log(Luminosity/Solar Luminosity) ")
-plt.legend()
-'''
+#plt.plot(np.log10(AccList/const.M_sun.to_value()), np.log10(AmBol_solar), linestyle='-', label='Total Luminosity')
+plt.plot(np.log10(AccList/AccR_Edd(Mass)), np.log10(AmVX), linestyle='-', color = 'black', label = r'10$M_{\odot}$', linewidth = 2)
+plt.plot(np.log10(AccList/AccR_Edd(Mass2)), np.log10(AmVX2), linestyle='--', color = 'red', label = r'100$M_{\odot}$', linewidth = 2)
+plt.plot(np.log10(AccList/AccR_Edd(Mass3)), np.log10(AmVX3), linestyle=':', color = 'blue', label = r'5$M_{\odot}$', linewidth = 2)
+plt.xlabel(r"Log($\dot{M}$) [$\dot{M}$$_{Edd}$]", fontsize = 18)
+plt.ylabel(r"Log($L_{V}$/$L_{X}$)", fontsize = 18)
+plt.legend(fontsize=18, frameon=True, loc='best')
+plt.tick_params(axis='both', which='major', labelsize=16, length=7, width=2, top=True, right=True) 
+plt.tick_params(axis='both', which='minor', labelsize=10, length=4, width=1.5, top=True, right=True) 
+plt.minorticks_on()
+plt.tight_layout()
+plt.savefig('Luminosity_Ratio_vs_Acccretion_Rate.png', dpi=300, bbox_inches='tight')
 
-'''
+#            Mass=10$M_{\odot}$, AccR=10$^{-7}$$\dot{M}$$_{Edd}$') #5x10$^{-15}$$M_{\odot}$Yr$^{-1}$
+
+
+######### Limit the lines so that they all start and stop at the same x-axis value #########
+
+
 plt.figure(figsize=(8, 6))
 #plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVis), linestyle='-', label='Visible')
 #plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmXray), linestyle='-', label='X-ray')
-plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmBol_solar), linestyle='-', label='Total Luminosity')
-#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX), linestyle='-', label='Visible/X-ray')
-plt.xlabel("Log(Mass) [M☉]")
-plt.ylabel("Log(Luminosity/Solar Luminosity) ")
-plt.legend()
+#plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmBol_solar), linestyle='-', label='Total Luminosity')
+plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX), linestyle='-', color = 'black', label = r'10$^{-8}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX2), linestyle='--', color = 'red', label = r'10$^{-7}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.plot(np.log10(MassList/const.M_sun.to_value()), np.log10(MmVX3), linestyle=':', color = 'blue', label = r'10$^{-9}$$M_{\odot}$Yr$^{-1}$', linewidth = 2)
+plt.xlabel(r"Log(Mass) [$M_{\odot}$]", fontsize = 18)
+plt.ylabel(r"Log($L_{V}$/$L_{X}$)", fontsize = 18)
+plt.legend(fontsize=18, frameon=True, loc='best')
+plt.tick_params(axis='both', which='major', labelsize=16, length=7, width=2, top=True, right=True) 
+plt.tick_params(axis='both', which='minor', labelsize=10, length=4, width=1.5, top=True, right=True) 
+plt.minorticks_on()
+plt.tight_layout()
+plt.savefig('Luminosity_Ratio_vs_Mass.png', dpi=300, bbox_inches='tight')
 #plt.show()
 '''
 
-'''
-plt.figure(figsize=(8, 6))
-plt.plot(np.log10(AccList/const.M_sun.to_value()), np.log10(AmHB_OIII), linestyle='-', label='Halpha')
-plt.xlabel("Log(Accretion Rate) [M☉/s]")
-plt.ylabel("Log(Luminosity ratio) ")
-'''
 
 
 
@@ -1009,9 +1085,8 @@ for mass, lum in mLBolmatrix:
 
 
 
-
-
 '''
+
 #################################### 3D cases ##########################################
 mBolematrix = np.zeros((len(MassList), len(AccList)))
 mVismatrix = np.zeros((len(MassList), len(AccList)))
@@ -1077,28 +1152,113 @@ mVisXray_safe = np.maximum(mVisXray, small_value)  # Avoid log10(0)
 mVisXray_safe = np.minimum(mVisXray_safe, 10e150)
 
 
+plt.figure(figsize=(8, 6))
+
+cmap = plt.get_cmap("inferno")
+plt.pcolormesh(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray), shading='nearest', cmap=cmap) #shading options: flat, gouraud, nearest, auto
+cbar = plt.colorbar()
+plt.ylabel(r'Log(M) ($M_{\odot}$)', fontsize = 18)
+cbar.set_label(r"Log($L_{V}$/$L_{X}$)", fontsize = 18)
+plt.xlabel(r"Log($\dot{M}$) ($M_{\odot}$Yr$^{-1}$)", fontsize = 18)
+plt.tick_params(axis='both', which='major', labelsize=16, length=7, width=2, top=True, right=True)
+plt.tick_params(axis='both', which='minor', labelsize=10, length=4, width=1.5, top=True, right=True)
+plt.minorticks_on()
+plt.tight_layout()
+plt.savefig('Accretion_Rate.png', dpi=300, bbox_inches='tight')
+'''
+
+
+
+
+'''
+rc('font',size=28)
+rc('font',family='serif')
+rc('axes',labelsize=32)
+
 # 3D Plot 
-fig = plt.figure(figsize=(12, 9))
-ax = fig.add_subplot(111, projection='3d')
+fig = plt.figure(figsize=(13.5,8))
+ax = fig.add_subplot(121, projection='3d')
+plt.subplots_adjust(left=0, right=0.90, top=1, bottom=0, wspace=0.22)
 #ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGrid), np.log10(mBolematrix))
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mVismatrix), cmap='viridis')
 #ax.plot_surface(np.log10(MassGrid), np.log10(AccGrid), np.log10(mXraymatrix), cmap='viridis')
-ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray_safe), cmap='viridis')
+sur = ax.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray_safe), cmap='jet')
+cont = (np.log10(mVisXray_safe).min()-np.log10(mVisXray_safe).max())*0.4
+cset = ax.contour(np.log10(MassGrid/const.M_sun.to_value()),np.log10(AccGridSolar),np.log10(mVisXray_safe).reshape(np.log10(MassGrid/const.M_sun.to_value()).shape),zdir='z',offset=cont)
 #ax.plot3D(np.log10(AccList), np.log10(AmVis), np.log10(AmXray))#, cmap='viridis')
+ax1 = fig.add_subplot(122, projection='3d')
+sur2 = ax1.plot_surface(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridEdd), np.log10(mVisXray_safe), cmap='viridis')
+cont2 = (np.log10(mVisXray_safe).min()-np.log10(mVisXray_safe).max())*0.4
+cset2 = ax1.contour(np.log10(MassGrid/const.M_sun.to_value()),np.log10(AccGridEdd),np.log10(mVisXray_safe).reshape(np.log10(MassGrid/const.M_sun.to_value()).shape),zdir='z',offset=cont2)
 
 
 
+ax.xaxis.set_rotate_label(False)
+ax.yaxis.set_rotate_label(False)
+ax.zaxis.set_rotate_label(False)
+ax.view_init(elev=10, azim=135)
+ax.grid(False)
+ax.xaxis.pane.set_edgecolor('black')
+ax.yaxis.pane.set_edgecolor('black')
+ax.xaxis.pane.fill = False
+ax.yaxis.pane.fill = False
+ax.zaxis.pane.fill = False
+[t.set_va('center') for t in ax.get_yticklabels()]
+[t.set_ha('left') for t in ax.get_yticklabels()]
+[t.set_va('center') for t in ax.get_xticklabels()]
+[t.set_ha('right') for t in ax.get_xticklabels()]
+[t.set_va('center') for t in ax.get_zticklabels()]
+[t.set_ha('left') for t in ax.get_zticklabels()]
+ax.xaxis._axinfo['tick']['inward_factor'] = 0
+ax.xaxis._axinfo['tick']['outward_factor'] = 0.4
+ax.yaxis._axinfo['tick']['inward_factor'] = 0
+ax.yaxis._axinfo['tick']['outward_factor'] = 0.4
+ax.zaxis._axinfo['tick']['inward_factor'] = 0
+ax.zaxis._axinfo['tick']['outward_factor'] = 0.4
+ax.zaxis._axinfo['tick']['outward_factor'] = 0.4
 
+ax.set_ylim(-19, -4)
+ax.set_xlabel(r'Log(Mass) ($M_{\odot}$)', fontsize = 16)
+ax.set_zlabel(r"Log($L_{V}$/$L_{X}$)", fontsize = 16)
+ax.set_ylabel(r"Log(Accretion Rate) ($M_{\odot}$Yr$^{-1}$)", fontsize = 16)
+#ax.tick_params(axis='x', which='major', labelsize=14, length=6, width=1.5, top=True, right=True, left=True, bottom=True)
+#ax.tick_params(axis='x', which='minor', labelsize=10, length=3, width=1, top=True, right=True, left=True, bottom=True)
+#ax.tick_params(axis='y', which='major', labelsize=14, length=6, width=1.5, top=True, right=True, left=True, bottom=True)
+#ax.tick_params(axis='y', which='minor', labelsize=10, length=3, width=1, top=True, right=True, left=True, bottom=True)
+#ax.tick_params(axis='z', which='major', labelsize=14, length=6, width=1.5, top=True, right=True, left=True, bottom=True)
+#ax.tick_params(axis='z', which='minor', labelsize=10, length=3, width=1, top=True, right=True, left=True, bottom=True)
+#ax.minorticks_on()
 
-fig = plt.figure(figsize=(12, 9))
-ax = fig.add_subplot(111, projection='3d')
-ax.contour3D(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray_safe), 50)#, cmap='viridis')
+ax1.set_xlabel(r'Log(Mass) ($M_{\odot}$)', fontsize = 16)
+ax1.set_zlabel(r"Log($L_{V}$/$L_{X}$)", fontsize = 16)
+ax1.set_ylabel(r"Log(Accretion Rate) ($M_{\odot}$Yr$^{-1}$)", fontsize = 16)
 
+ax1.xaxis.set_rotate_label(False)
+ax1.yaxis.set_rotate_label(False)
+ax1.zaxis.set_rotate_label(False)
+ax1.view_init(elev=10, azim=135)
+ax1.grid(False)
+ax1.xaxis.pane.set_edgecolor('black')
+ax1.yaxis.pane.set_edgecolor('black')
+ax1.xaxis.pane.fill = False
+ax1.yaxis.pane.fill = False
+ax1.zaxis.pane.fill = False
+[t.set_va('center') for t in ax1.get_yticklabels()]
+[t.set_ha('left') for t in ax1.get_yticklabels()]
+[t.set_va('center') for t in ax1.get_xticklabels()]
+[t.set_ha('right') for t in ax1.get_xticklabels()]
+[t.set_va('center') for t in ax1.get_zticklabels()]
+[t.set_ha('left') for t in ax1.get_zticklabels()]
+ax1.xaxis._axinfo['tick']['inward_factor'] = 0
+ax1.xaxis._axinfo['tick']['outward_factor'] = 0.4
+ax1.yaxis._axinfo['tick']['inward_factor'] = 0
+ax1.yaxis._axinfo['tick']['outward_factor'] = 0.4
+ax1.zaxis._axinfo['tick']['inward_factor'] = 0
+ax1.zaxis._axinfo['tick']['outward_factor'] = 0.4
+ax1.zaxis._axinfo['tick']['outward_factor'] = 0.4
+'''
 
-fig = plt.figure(figsize=(12, 9))
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_wireframe(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSolar), np.log10(mVisXray_safe))#, cmap='viridis')
-
+#plt.tight_layout()
 
 #fig = plt.figure(figsize=(12, 9))
 #ax = fig.add_subplot(111, projection='3d')
@@ -1106,23 +1266,25 @@ ax.plot_wireframe(np.log10(MassGrid/const.M_sun.to_value()), np.log10(AccGridSol
 
 #ax.set_zlim(0, 200)
 
-ax.set_xlabel('log10(Mass) [M☉]')
-ax.set_zlabel('log10(Luminosity [visible/x-ray])')
-ax.set_ylabel('log10(Accretion Rate) [M☉/yr]')
+#ax.set_xlabel('log10(Mass) [M☉]')
+#ax.set_zlabel('log10(Luminosity [visible/x-ray])')
+#ax.set_ylabel('log10(Accretion Rate) [M☉/yr]')
 #plt.show()
 
-
-
+'''
 plt.figure(figsize=(8, 6))
 #ax = fig.add_subplot(111, projection='3d')
 plt.plot(np.log10(AmXray), np.log10(AmVis), linestyle='-', label='Visible/X-ray')
 #plt.plot(AccList, AmVX)
 plt.xlabel('Log(L X-ray)')
 plt.ylabel('Log(L Optical)')
+'''
+
+
 
 
 ########################################################################################
-'''
+
 
 
 
@@ -1195,6 +1357,15 @@ ax1.plot(np.log10(AccList2/AccR_Edd(Mass)), np.log10(LvissA), linestyle='-', lab
 
 '''
 
+
+
+
+
+
+
+###########################  SED plot USE THIS ###########################
+
+'''
 LumDAcc1sum = Lsum(MassBH, 0.0001*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
 LumDAcc2sum = Lsum(MassBH, 0.1*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
 LumMilestonesum = Lsum(MassBH, 0.0000001*AccR_Edd(MassBH), R_midpoints(MassBH), Rin(MassBH))
@@ -1210,24 +1381,16 @@ LumSMBH2sum = Lsum(MassSMBH2, 0.0000001*AccR_Edd(MassBH), R_midpoints(MassSMBH2)
 
 
 em_spectrum = {
-    'Radio': (1e6 / 1e9, 3e9 / 1e9),
-    'Microwave': (3e9 / 1e9, 3e11 / 1e9),
-    'Infrared': (3e11 / 1e9, 4e14 / 1e9),
     'Optical': (4e14 / 1e9, 7.5e14 / 1e9),
-    'Ultraviolet': (7.5e14 / 1e9, 3e16 / 1e9),
     'X-ray': (3e16 / 1e9, 3e19 / 1e9),
-    'Gamma-ray': (3e19 / 1e9, 3e24 / 1e9)
 }
-
-gulp = 0.0001*AccR_Edd(MassBH)
-print(gulp)
 
 
 
 
 
 fig, ax1 = plt.subplots()
-fig.set_size_inches(10, 6)
+fig.set_size_inches(8,6)
 
 #fig.patch.set_facecolor('#D5D5D5') 
 #ax1.set_facecolor('#D5D5D5') 
@@ -1235,12 +1398,13 @@ fig.set_size_inches(10, 6)
 ax1.set_xlim(-2, 9)
 ax1.set_ylim(9, 32)
 
-d, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label=r'Mass=10$M_{\odot}$, AccR=10$^{-7}$$\dot{M}$$_{Edd}$') #5x10$^{-15}$$M_{\odot}$Yr$^{-1}$')
+d, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumMilestonesum), linestyle='-', color='black', label=r'Mass=10$M_{\odot}$, AccR=10$^{-7}$$\dot{M}$$_{Edd}$', linewidth=2) #5x10$^{-15}$$M_{\odot}$Yr$^{-1}$')
 #e, = ax1.plot(np.log10(freq), np.log10(freq * LumEddsum), linestyle='-', color='purple', label='Eddington Limit (10)')
-a, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH1sum), linestyle='--', color='red', label=r'Increaing Mass +10$^4$$M_{\odot}$')
-b, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH2sum), linestyle='--', color='red')#, label='10^8')
-h, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc1sum), linestyle=':', color='blue', label=r'Increasing Accretion Rate +10$^{-3}$$\dot{M}$$_{Edd}$')
-i, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc2sum), linestyle=':', color='blue')#, label='') 
+a, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH1sum), linestyle='--', color='red', label=r'Increaing Mass +10$^4$$M_{\odot}$', linewidth=2)
+b, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumSMBH2sum), linestyle='--', color='red', linewidth=2)#, label='10^8')
+h, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc1sum), linestyle=':', color='blue', label=r'Increasing Accretion Rate +10$^{-3}$$\dot{M}$$_{Edd}$', linewidth=2)
+i, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc2sum), linestyle=':', color='blue', linewidth=2)#, label='') 
+
 
 
 #c, = ax1.plot(np.log10(freq), np.log10(freq * LumSMBH3sum), linestyle='-', color='red', label='10^11')
@@ -1253,33 +1417,31 @@ i, = ax1.plot(np.log10(freq/10e9), np.log10(freq * LumDAcc2sum), linestyle=':', 
 
 
 
-original = plt.Line2D([0], [0], color='black', linestyle='-', label=r'Mass=10$M_{\odot}$, AccR=10$^{15}$$M_{\odot}$')
-mass = plt.Line2D([0], [0], color='red', linestyle='--', label=r'Increasing Mass +10$^4$$M_{\odot}$')
-accretion = plt.Line2D([0], [0], color='blue', linestyle=':', label=r'Increasing Accretion Rate +10$^{15}$$M_{\odot}$')
-mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$')
-mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$'),
+original = plt.Line2D([0], [0], color='black', linestyle='-', label=r'Mass=10$M_{\odot}$, AccR=10$^{15}$$M_{\odot}$', linewidth=2)
+mass = plt.Line2D([0], [0], color='red', linestyle='--', label=r'Increasing Mass +10$^4$$M_{\odot}$', linewidth=2)
+accretion = plt.Line2D([0], [0], color='blue', linestyle=':', label=r'Increasing Accretion Rate +10$^{15}$$M_{\odot}$', linewidth=2)
+mass_10msun = plt.Line2D([0], [0], color='blue', linestyle='-', label=r'Mass=10$M_{\odot}$', linewidth=2)
+mass_1msun = plt.Line2D([0], [0], color='green', linestyle='-', label=r'Mass=10$^{4}$$M_{\odot}$', linewidth=2),
 
-ax1.legend(handles=[d, a, h], fontsize=12, loc='upper right')
+ax1.legend(handles=[d, a, h], fontsize=16, loc='upper right')
 
 colors = {
-    'Radio': 'lightblue',
-    'Microwave': 'lightgreen',
-    'Infrared': 'lightcoral',
-    'Optical': 'lightyellow',
-    'Ultraviolet': 'lightpink',
-    'X-ray': 'lightgray',
-    'Gamma-ray': 'lightcyan'
+    'Optical': 'gray',
+    'X-ray': 'gray',
 }
 
 for band, (start, end) in em_spectrum.items():
-    ax1.axvspan(np.log10(start), np.log10(end), color=colors[band], alpha=0.3)
+    ax1.axvspan(np.log10(start), np.log10(end), color=colors[band], alpha=0.2)
 
 
 
-ax1.set_ylabel(r"$\log_{10}(\nu L_\nu)$ (W)", fontsize=16)
-ax1.set_xlabel(r'$\log_{10}(\nu)$ (GHz)', fontsize=16)
-ax1.tick_params(axis='x', labelsize=14)
-ax1.tick_params(axis='y', labelsize=14)
+ax1.set_ylabel(r"$\log_{10}(\nu L_\nu)$ (W)", fontsize=20)
+ax1.set_xlabel(r'$\log_{10}(\nu)$ (GHz)', fontsize=20)
+ax1.minorticks_on()
+ax1.tick_params(axis='x', which='major', bottom=True, top=False, labelsize=16, length=7, width=2)
+ax1.tick_params(axis='x', which='minor', bottom=True, top=False, labelsize=10, length=4, width=1.5)
+ax1.tick_params(axis='y', which='major', right=True, top=False, labelsize=16, length=7, width=2)
+ax1.tick_params(axis='y', which='minor', right=True, top=False, labelsize=10, length=4, width=1.5)
 ax1.legend(fontsize=14, loc='upper left')
 
 # Create a secondary x-axis
@@ -1297,8 +1459,11 @@ custom_labels = [f'{tick:.0f}' if tick != 0 else '-e' for tick in wavelength_tic
 ax2.set_xlim(ax1.get_xlim())
 ax2.set_xticks(freq_ticks)
 ax2.set_xticklabels(custom_labels)
-ax2.set_xlabel(r'$\log_{10}(\lambda)$ m', fontsize=16)
-ax2.tick_params(axis='x', labelsize=14)
+ax2.set_xlabel(r'$\log_{10}(\lambda)$ m', fontsize=20)
+ax2.minorticks_on()
+ax2.tick_params(axis='x', which='major', top=True, labelsize=16, length=7, width=2)
+ax2.tick_params(axis='x', which='minor', right=True, top=True, labelsize=16, length=4, width=1.5)
+
 
 peak_indices = {
     'MileStone': np.argmax(LumSMBH1sum),
@@ -1311,12 +1476,13 @@ peak_y_values = {key: np.log10(freq[peak_indices[key]] * value[peak_indices[key]
 [LumSMBH1sum, LumSMBH2sum])}
 
 
-print("Peak frequencies (Hz) and corresponding Luminosities (W):")
-for key in peak_frequencies:
-    print(f"{key}: Frequency = {peak_frequencies[key]:.2e} Hz, Luminosity = {10**peak_y_values[key]:.2e}")
+#print("Peak frequencies (Hz) and corresponding Luminosities (W):")
+#for key in peak_frequencies:
+#    print(f"{key}: Frequency = {peak_frequencies[key]:.2e} Hz, Luminosity = {10**peak_y_values[key]:.2e}")
 
-
-
+plt.savefig('SED_plot.png', dpi=300, bbox_inches='tight')
+'''
+plt.tight_layout()  
 
 plt.show()
 
